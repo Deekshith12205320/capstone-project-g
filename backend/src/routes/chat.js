@@ -157,6 +157,17 @@ router.post('/', async (req, res, next) => {
 });
 
 // -----------------------------------------------------------------------------
+// GET /chat/status
+// Returns the availability of AI providers
+// -----------------------------------------------------------------------------
+router.get('/status', (req, res) => {
+  res.json({
+    groq: !!process.env.GROQ_API_KEY,
+    gemini: !!process.env.GEMINI_API_KEY
+  });
+});
+
+// -----------------------------------------------------------------------------
 // GET /chat/history
 // Returns recent conversation history
 // -----------------------------------------------------------------------------

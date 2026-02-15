@@ -93,6 +93,19 @@ export async function sendMessage(text: string): Promise<ChatResponse> {
     }
 }
 
+export async function fetchAIStatus(): Promise<{ groq: boolean; gemini: boolean }> {
+    try {
+        const response = await fetch(`${API_URL}/chat/status`, {
+            headers: getAuthHeader()
+        });
+        if (!response.ok) throw new Error('Failed to fetch AI status');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching AI status:', error);
+        return { groq: false, gemini: false };
+    }
+}
+
 export async function startAssessment(type: string): Promise<ChatResponse> {
     try {
         const response = await fetch(`${API_URL}/assessments/${type}`, {

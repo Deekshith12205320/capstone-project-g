@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Send, Bot, User, AlertTriangle, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { sendMessage, startAssessment, submitAssessment, fetchHistory, clearHistory, type ChatResponse, type Question } from '../services/api';
+import { sendMessage, startAssessment, submitAssessment, fetchHistory, clearHistory, fetchAIStatus, type ChatResponse, type Question } from '../services/api';
 import { Trash2 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useAmbience } from '../context/AmbienceContext';
@@ -62,6 +62,7 @@ export default function Chat() {
         currentQuestionIndex: 0,
         answers: {}
     });
+    const [aiStatus, setAiStatus] = useState<{ groq: boolean; gemini: boolean }>({ groq: true, gemini: true });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -134,6 +135,16 @@ export default function Chat() {
     useEffect(() => {
         scrollToBottom();
     }, [messages, assessment]);
+
+    useEffect(() => {
+        const checkStatus = async () => {
+            const status = await fetchAIStatus();
+            setAiStatus(status);
+        };
+        checkStatus();
+        const timer = setInterval(checkStatus, 30000); // Check every 30s
+        return () => clearInterval(timer);
+    }, []);
 
     const handleClearHistory = async () => {
         try {
@@ -285,28 +296,30 @@ export default function Chat() {
                     <p className="text-muted">Your personal space for reflection.</p>
                 </div>
 
-                {/* AI Provider Toggle (Visual Only) */}
+                {/* AI Provider Toggle */}
                 <div className="hidden sm:flex items-center bg-muted/50 p-1 rounded-lg border border-border/40">
                     <button
                         onClick={() => setActiveProvider('groq')}
                         className={cn(
-                            "px-3 py-1 rounded-md text-xs font-medium transition-all",
+                            "px-3 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-2",
                             activeProvider === 'groq'
                                 ? "bg-white text-primary shadow-sm"
                                 : "text-muted hover:text-text"
                         )}
                     >
-                        Groq (Fast)
+                        <div className={cn("w-1.5 h-1.5 rounded-full", aiStatus.groq ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]" : "bg-red-400")} />
+                        Groq
                     </button>
                     <button
                         onClick={() => setActiveProvider('gemini')}
                         className={cn(
-                            "px-3 py-1 rounded-md text-xs font-medium transition-all",
+                            "px-3 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-2",
                             activeProvider === 'gemini'
                                 ? "bg-white text-primary shadow-sm"
                                 : "text-muted hover:text-text"
                         )}
                     >
+                        <div className={cn("w-1.5 h-1.5 rounded-full", aiStatus.gemini ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]" : "bg-red-400")} />
                         Gemini
                     </button>
                 </div>
