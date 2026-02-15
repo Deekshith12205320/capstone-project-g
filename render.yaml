@@ -19,11 +19,9 @@ services:
       - key: PORT
         value: 10000
 
+staticSites:
   # Frontend Static Site
-  - type: static
-    name: student-wellbeing-frontend
-    env: static
-    plan: free
+  - name: student-wellbeing-frontend
     rootDir: frontend
     buildCommand: npm install && npm run build
     publishDir: dist
