@@ -16,7 +16,6 @@ const AmbienceContext = createContext<AmbienceContextType | undefined>(undefined
 export function AmbienceProvider({ children }: { children: ReactNode }) {
     const [theme, setTheme] = useState<Theme>('green');
     const [isFocusMode, setFocusMode] = useState(false);
-    const [bgImage, setBgImage] = useState<string>('');
 
     // Define gradients (fallback)
     const greenGradient = 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)';
