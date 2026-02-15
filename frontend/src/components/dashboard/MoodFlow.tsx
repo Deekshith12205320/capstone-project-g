@@ -121,13 +121,25 @@ export default function MoodFlow({ assessments = [] }: MoodFlowProps) {
                         {/* Area */}
                         <path d={area} fill="url(#wormGradient)" />
 
-                        {/* Line (Worm) */}
-                        <path d={line} fill="none" stroke="#16a34a" strokeWidth="3" strokeLinejoin="round" />
+                        {/* Line (Worm) - Enhanced visibility */}
+                        <path d={line} fill="none" stroke="#16a34a" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" />
 
-                        {/* Dots (Wickets/Runs style) */}
+                        {/* Dots with numerical values */}
                         {coords?.map((p, i) => (
-                            <g key={i} className="group cursor-pointer">
-                                <circle cx={p.x} cy={p.y} r="5" className="fill-white stroke-green-600 stroke-2 hover:scale-125 transition-transform" />
+                            <g key={i} className="group">
+                                {/* Circle - removed hover:scale to prevent shake */}
+                                <circle cx={p.x} cy={p.y} r="6" className="fill-white stroke-green-600 stroke-[3px] drop-shadow-sm" />
+
+                                {/* Numerical value label above point */}
+                                <text
+                                    x={p.x}
+                                    y={p.y - 15}
+                                    textAnchor="middle"
+                                    className="text-[11px] font-bold fill-gray-700"
+                                >
+                                    {Math.round(dataPoints[i])}
+                                </text>
+
                                 {/* Tooltip on hover */}
                                 <title>{chartData[i].type}: {dataPoints[i]}</title>
                             </g>

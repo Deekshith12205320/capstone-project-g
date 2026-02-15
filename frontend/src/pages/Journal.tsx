@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { fetchJournalEntries, createJournalEntry } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -16,37 +17,36 @@ export default function Journal() {
 
     // Load entries on mount
     useEffect(() => {
-        // Use name for guests to persist across sessions, ID for authenticated users
-        const key = user ? (user.isGuest ? `journal_entries_${user.name}` : `journal_entries_${user.id}`) : 'guest_journal_entries';
-        const saved = localStorage.getItem(key);
-        if (saved) {
-            setEntries(JSON.parse(saved));
-        }
+        const loadEntries = async () => {
+            try {
+                const data = await fetchJournalEntries();
+                setEntries(data);
+            } catch (error) {
+                console.error("Failed to load journal entries", error);
+            }
+        };
+        loadEntries();
     }, [user]);
 
-    const saveEntry = () => {
+    const saveEntry = async () => {
         if (!content.trim()) return;
 
         const newEntry = {
-            id: Date.now().toString(),
             title: title || 'Untitled Reflection',
             content,
-            date: new Date().toISOString(),
-            mood: 'Neutral' // Could link this to mood selector later
+            mood: 'Neutral', // Could link this to mood selector later
+            tags: []
         };
 
-        const updatedEntries = [newEntry, ...entries];
-        setEntries(updatedEntries);
+        const savedEntry = await createJournalEntry(newEntry);
 
-        const key = user ? (user.isGuest ? `journal_entries_${user.name}` : `journal_entries_${user.id}`) : 'guest_journal_entries';
-        localStorage.setItem(key, JSON.stringify(updatedEntries));
-
-        setTitle('');
-        setContent('');
-        if (user?.name === 'GitHub User') {
-            alert("Entry saved to your GitHub Profile (Simulated)");
+        if (savedEntry) {
+            setEntries([savedEntry, ...entries]);
+            setTitle('');
+            setContent('');
+            alert("Entry saved successfully!");
         } else {
-            alert("Entry saved to your Chrome Profile");
+            alert("Failed to save entry.");
         }
     };
 

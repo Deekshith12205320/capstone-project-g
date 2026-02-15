@@ -42,16 +42,15 @@ export default function DailyAssessment() {
         }
     };
 
-    const handleSubmit = async (finalAnswers: Record<string, number>) => {
+    const handleSubmit = async (e: React.MouseEvent | React.FormEvent, finalAnswers: Record<string, number>) => {
+        e.preventDefault();
         setLoading(true);
         try {
-            const response = await submitAssessment('daily', finalAnswers);
-            setScore(response.score || 0);
-            setSeverity(response.severity || '');
-            setIsComplete(true);
+            await submitAssessment('daily', finalAnswers);
+            // Redirect immediately to dashboard to reflect changes
+            navigate('/dashboard');
         } catch (error) {
             console.error('Failed to submit assessment', error);
-        } finally {
             setLoading(false);
         }
     };
@@ -70,38 +69,6 @@ export default function DailyAssessment() {
         );
     }
 
-    if (isComplete) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-purple-50 p-8">
-                <Card className="max-w-2xl w-full p-8 text-center">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle size={40} className="text-green-600" />
-                    </div>
-                    <h2 className="text-3xl font-serif font-bold text-text mb-4">Assessment Complete!</h2>
-                    <p className="text-muted mb-6">
-                        Thank you for taking the time to check in with yourself.
-                    </p>
-
-                    <div className="bg-primary/5 p-6 rounded-2xl mb-8">
-                        <p className="text-sm text-muted mb-2">Your Wellbeing Score</p>
-                        <p className="text-5xl font-bold text-primary mb-2">{score}</p>
-                        <p className="text-lg font-medium text-text capitalize">
-                            {severity === 'excellent' && '🌟 Thriving'}
-                            {severity === 'good' && '👍 Managing Well'}
-                            {severity === 'fair' && '💪 Some Struggles'}
-                            {severity === 'concerning' && '🤝 Need Support'}
-                        </p>
-                    </div>
-
-                    <div className="flex gap-4 justify-center">
-                        <Button onClick={() => navigate('/dashboard')} size="lg">
-                            Back to Dashboard
-                        </Button>
-                    </div>
-                </Card>
-            </div>
-        );
-    }
 
     const currentQuestion = questions[currentIndex];
     const progress = ((currentIndex + 1) / questions.length) * 100;
@@ -170,9 +137,10 @@ export default function DailyAssessment() {
                         {/* Show Submit button on last question if answered */}
                         {currentIndex === questions.length - 1 && answers[currentIndex] !== undefined ? (
                             <Button
-                                onClick={() => handleSubmit(answers)}
+                                onClick={(e) => handleSubmit(e, answers)}
                                 size="lg"
                                 className="px-8"
+                                type="button"
                             >
                                 Submit Assessment
                             </Button>

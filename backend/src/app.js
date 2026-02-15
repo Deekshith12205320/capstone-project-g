@@ -15,6 +15,7 @@ import actionsRouter from './routes/actions.js';
 import statsRouter from './routes/dashboard/stats.js';
 import adminRouter from './routes/admin.js';
 import authRouter from './routes/auth.js';
+import journalRouter from './routes/journal.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,6 +58,7 @@ app.use('/assessments', requireAuth, assessmentsRouter);
 app.use('/suggestions', requireAuth, suggestionsRouter);
 app.use('/actions', requireAuth, actionsRouter);
 app.use('/dashboard', requireAuth, statsRouter);
+app.use('/journal', requireAuth, journalRouter);
 
 // admin (can add role checks later)
 app.use('/admin', requireAuth, adminRouter);

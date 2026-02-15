@@ -27,14 +27,10 @@ function ensureFollowUpQuestion(text) {
 // -----------------------------------------------------------------------------
 export async function llmChat(
   messages,
-  { temperature = 0.5, maxTokens = 700 } = {}
+  { temperature = 0.5, maxTokens = 700, forceGemini } = {}
 ) {
   const provider = (process.env.LLM_PROVIDER || 'mock').toLowerCase();
   console.log('[LLM] provider =', provider);
-
-  // ✅ Supported Gemini model
-  const modelName = process.env.GEMINI_MODEL || 'models/gemini-2.5-flash';
-  console.log('[LLM] model =', modelName);
 
   // ---------------------------------------------------------------------------
   // MOCK MODE (no API key)
@@ -58,18 +54,58 @@ export async function llmChat(
       return "I’m really worried about your safety. If you're in immediate danger, please contact local emergency services or a trusted person right now.";
     }
 
-    const baseReply = `Mock Reply (LLM disabled): I hear you. "${userMessage.slice(
-      0,
-      200
-    )}"`;
+    return baseReply;
+  }
 
-    return ensureFollowUpQuestion(baseReply);
+  // ---------------------------------------------------------------------------
+  // GROQ MODE (OpenAI Compatible)
+  // ---------------------------------------------------------------------------
+  if (provider === 'groq') {
+    const apiKey = process.env.GROQ_API_KEY;
+    const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+
+    if (!apiKey) {
+      console.warn('[Groq] API key missing, falling back to Gemini');
+      return llmChat(messages, { temperature, maxTokens, forceGemini: true });
+    }
+
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model,
+          messages: messages.map(m => ({
+            role: m.role === 'assistant' ? 'assistant' : m.role,
+            content: m.content
+          })),
+          temperature,
+          max_tokens: maxTokens
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('[Groq Error]', response.status, errorData);
+        throw new Error('Groq API call failed');
+      }
+
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content || '';
+    } catch (err) {
+      console.error('[Groq Fatal]', err.message);
+      // Automatic fallback to Gemini if Groq fails
+      return llmChat(messages, { temperature, maxTokens, forceGemini: true });
+    }
   }
 
   // ---------------------------------------------------------------------------
   // REAL GEMINI MODE (REST v1)
   // ---------------------------------------------------------------------------
-  if (provider === 'gemini') {
+  if (provider === 'gemini' || forceGemini) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       throw Object.assign(
@@ -77,6 +113,10 @@ export async function llmChat(
         { status: 500 }
       );
     }
+
+    // ✅ Supported Gemini model
+    const modelName = process.env.GEMINI_MODEL || 'models/gemini-1.5-flash';
+    console.log('[LLM] model =', modelName);
 
     // Merge all system messages into one instruction block
     const systemText = messages
@@ -108,7 +148,7 @@ export async function llmChat(
       }
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1/${modelName}:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
     const body = {
       contents,
@@ -138,9 +178,7 @@ export async function llmChat(
         ) {
           console.warn('[Gemini] Quota exceeded — using fallback response');
 
-          return ensureFollowUpQuestion(
-            "I’m really glad you reached out. I might be a bit limited right now, but I’m still here with you. What you’re feeling matters, and we can take this one step at a time."
-          );
+          return "I’m really glad you reached out. I might be a bit limited right now, but I’m still here with you. What you’re feeling matters, and we can take this one step at a time.";
         }
 
         throw Object.assign(
@@ -150,19 +188,14 @@ export async function llmChat(
       }
 
       const json = JSON.parse(rawText);
-      const out =
+      return (
         extractText(json) ||
-        'Sorry, I could not generate a response right now.';
-
-      // ✅ Enforce human-like follow-up
-      return ensureFollowUpQuestion(out);
+        'Sorry, I could not generate a response right now.'
+      );
     } catch (err) {
       console.error('[Gemini REST fatal]', err?.message || err);
 
-      // Final safety fallback
-      return ensureFollowUpQuestion(
-        "I’m here with you, even if something didn’t work perfectly just now. You’re not alone in this. Would you like to share what’s been on your mind?"
-      );
+      return "I’m here with you, even if something didn’t work perfectly just now. You’re not alone in this. Would you like to share what’s been on your mind?";
     }
   }
 

@@ -22,7 +22,8 @@ import {
 
 import {
   saveLatestAssessment,
-  getLatestAssessment
+  getLatestAssessment,
+  getAssessmentHistory
 } from '../services/assessmentStore.js';
 
 const router = Router();
@@ -35,6 +36,21 @@ router.get('/list', (_req, res) => {
   res.json({
     assessments: listAssessments()
   });
+});
+
+// -----------------------------------------------------------------------------
+// GET /assessments/history
+// Returns full history for charts
+// -----------------------------------------------------------------------------
+router.get('/history', async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const history = await getAssessmentHistory(userId);
+    res.json(history);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch assessment history' });
+  }
 });
 
 // -----------------------------------------------------------------------------

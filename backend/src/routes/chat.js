@@ -160,10 +160,15 @@ router.post('/', async (req, res, next) => {
 // GET /chat/history
 // Returns recent conversation history
 // -----------------------------------------------------------------------------
-router.get('/history', (req, res) => {
-  const userId = req.user.userId;
-  const history = getHistory(userId);
-  res.json(history);
+router.get('/history', async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const history = await getHistory(userId);
+    res.json(history);
+  } catch (err) {
+    console.error('Error fetching history:', err);
+    res.status(500).json({ error: 'Failed to fetch history' });
+  }
 });
 
 // -----------------------------------------------------------------------------

@@ -110,26 +110,36 @@ export async function startAssessment(type: string): Promise<ChatResponse> {
         // Handle two formats:
         // 1. Old format: items are strings, global scale
         // 2. New format (daily): items have question + scale properties
+        // Parse questions
         const questions = data.items.map((item: any, index: number) => {
             // Check if item is an object with 'question' field (new format)
             if (typeof item === 'object' && item.question) {
                 return {
                     id: index.toString(),
                     text: item.question,
-                    options: item.scale.map((scalePoint: any) => ({
+                    options: (item.scale || []).map((scalePoint: any) => ({
                         text: scalePoint.label,
                         value: scalePoint.value
                     }))
                 };
             }
-            // Old format: item is a string, use global scale
+
+            // Legacy format or string scale
+            let scaleOptions = [];
+            if (Array.isArray(data.scale)) {
+                scaleOptions = data.scale.map((s: any) => ({ text: s.label, value: s.value }));
+            } else if (typeof data.scale === 'string') {
+                // e.g. "0=Never, 1=Often"
+                scaleOptions = data.scale.split(',').map((part: string) => {
+                    const [val, label] = part.split('=').map((s: string) => s.trim());
+                    return { text: label, value: parseInt(val) };
+                });
+            }
+
             return {
                 id: index.toString(),
                 text: item,
-                options: data.scale.map((scalePoint: any) => ({
-                    text: scalePoint.label,
-                    value: scalePoint.value
-                }))
+                options: scaleOptions
             };
         });
 
@@ -148,7 +158,10 @@ export async function submitAssessment(type: string, answers: Record<string, num
     try {
         // Convert record to array of values for backend
         // Assuming keys are '0', '1', '2' indices from the questions array
-        const answersArray = Object.keys(answers).sort().map(k => answers[k]);
+        // Fix: Sort numerically to avoid '1', '10', '2' sorting issues
+        const answersArray = Object.keys(answers)
+            .sort((a, b) => Number(a) - Number(b))
+            .map(k => answers[k]);
 
         const response = await fetch(`${API_URL}/assessments/submit`, {
             method: 'POST',
@@ -225,7 +238,7 @@ export async function clearHistory(): Promise<void> {
 
 export async function fetchAssessments(): Promise<AssessmentResult[]> {
     try {
-        const response = await fetch(`${API_URL}/chat/assessments`, {
+        const response = await fetch(`${API_URL}/assessments/history`, {
             headers: getAuthHeader()
         });
         if (!response.ok) throw new Error('Failed to fetch assessments');
@@ -319,5 +332,46 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
             totalAssessments: 0,
             history: []
         };
+    }
+}
+
+export interface JournalEntry {
+    id: string;
+    title: string;
+    content: string;
+    mood: string;
+    date: string;
+    tags?: string[];
+}
+
+export async function fetchJournalEntries(): Promise<JournalEntry[]> {
+    try {
+        const response = await fetch(`${API_URL}/journal`, {
+            headers: getAuthHeader()
+        });
+        if (!response.ok) throw new Error('Failed to fetch journal entries');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching journal entries:', error);
+        return [];
+    }
+}
+
+export async function createJournalEntry(entry: Partial<JournalEntry>): Promise<JournalEntry | null> {
+    try {
+        const response = await fetch(`${API_URL}/journal`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(entry)
+        });
+        if (!response.ok) throw new Error('Failed to save journal entry');
+        const data = await response.json();
+        return data.entry;
+    } catch (error) {
+        console.error('Error saving journal entry:', error);
+        return null;
     }
 }

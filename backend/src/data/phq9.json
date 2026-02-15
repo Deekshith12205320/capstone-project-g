@@ -1,7 +1,24 @@
 {
   "id": "phq9",
   "title": "PHQ-9 (Depression Screening)",
-  "scale": "0=Not at all, 1=Several days, 2=More than half the days, 3=Nearly every day",
+  "scale": [
+    {
+      "value": 0,
+      "label": "Not at all"
+    },
+    {
+      "value": 1,
+      "label": "Several days"
+    },
+    {
+      "value": 2,
+      "label": "More than half the days"
+    },
+    {
+      "value": 3,
+      "label": "Nearly every day"
+    }
+  ],
   "items": [
     "Little interest or pleasure in doing things",
     "Feeling down, depressed, or hopeless",
@@ -13,5 +30,8 @@
     "Moving or speaking so slowly that people notice OR being very fidgety/restless",
     "Thoughts that you would be better off dead or of hurting yourself"
   ],
-  "range": [0, 3]
+  "range": [
+    0,
+    3
+  ]
 }

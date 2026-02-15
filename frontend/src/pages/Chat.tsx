@@ -52,6 +52,8 @@ export default function Chat() {
         },
     ]);
     const [inputValue, setInputValue] = useState('');
+    const [activeProvider, setActiveProvider] = useState<'groq' | 'gemini'>('groq');
+
     const [isLoading, setIsLoading] = useState(false);
     const [assessment, setAssessment] = useState<AssessmentState>({
         active: false,
@@ -277,11 +279,38 @@ export default function Chat() {
 
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col">
-            <header className="mb-4 flex justify-between items-center">
+            <header className="mb-4 flex justify-between items-center text-left">
                 <div>
                     <h1 className="text-3xl font-serif font-bold text-text">Chat with Aura</h1>
                     <p className="text-muted">Your personal space for reflection.</p>
                 </div>
+
+                {/* AI Provider Toggle (Visual Only) */}
+                <div className="hidden sm:flex items-center bg-muted/50 p-1 rounded-lg border border-border/40">
+                    <button
+                        onClick={() => setActiveProvider('groq')}
+                        className={cn(
+                            "px-3 py-1 rounded-md text-xs font-medium transition-all",
+                            activeProvider === 'groq'
+                                ? "bg-white text-primary shadow-sm"
+                                : "text-muted hover:text-text"
+                        )}
+                    >
+                        Groq (Fast)
+                    </button>
+                    <button
+                        onClick={() => setActiveProvider('gemini')}
+                        className={cn(
+                            "px-3 py-1 rounded-md text-xs font-medium transition-all",
+                            activeProvider === 'gemini'
+                                ? "bg-white text-primary shadow-sm"
+                                : "text-muted hover:text-text"
+                        )}
+                    >
+                        Gemini
+                    </button>
+                </div>
+
                 <Button variant="ghost" size="sm" onClick={handleClearHistory} title="Clear History" className="text-muted hover:text-red-500">
                     <Trash2 size={20} />
                 </Button>

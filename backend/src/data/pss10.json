@@ -1,7 +1,28 @@
 {
   "id": "pss10",
   "title": "Perceived Stress Scale - 10 Item",
-  "scale": "0=Never, 1=Almost never, 2=Sometimes, 3=Fairly often, 4=Very often",
+  "scale": [
+    {
+      "value": 0,
+      "label": "Never"
+    },
+    {
+      "value": 1,
+      "label": "Almost never"
+    },
+    {
+      "value": 2,
+      "label": "Sometimes"
+    },
+    {
+      "value": 3,
+      "label": "Fairly often"
+    },
+    {
+      "value": 4,
+      "label": "Very often"
+    }
+  ],
   "items": [
     "In the last month, how often have you been upset because of something that happened unexpectedly?",
     "In the last month, how often have you felt that you were unable to control the important things in your life?",
@@ -14,5 +35,8 @@
     "In the last month, how often have you been angered because of things outside your control?",
     "In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?"
   ],
-  "range": [0, 4]
+  "range": [
+    0,
+    4
+  ]
 }

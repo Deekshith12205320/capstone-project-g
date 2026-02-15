@@ -90,13 +90,7 @@ export default function History() {
                     <h1 className="text-3xl font-serif font-bold text-text mb-2">Your Journey</h1>
                     <p className="text-muted">A timeline of your mental wellness check-ins and conversations.</p>
                 </div>
-                <Button
-                    onClick={() => navigate('/chat')}
-                    className="bg-primary hover:bg-primary/90 text-white gap-2 shadow-lg shadow-primary/25 rounded-full px-6"
-                >
-                    <Plus size={18} />
-                    New Check-in
-                </Button>
+
             </header>
 
             {/* Tabs ... */}

@@ -1,243 +1,294 @@
 import { useMemo } from 'react';
 import { Card } from '../ui/Card';
 import { Sprout } from 'lucide-react';
-import { useAmbience } from '../../context/AmbienceContext';
 import { cn } from '../../lib/utils';
 import type { AssessmentResult } from '../../services/api';
+import { useAmbience } from '../../context/AmbienceContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface MentalGardenProps {
     latestAssessment?: AssessmentResult | null;
 }
 
 export default function MentalGarden({ latestAssessment }: MentalGardenProps) {
-    const { theme } = useAmbience();
     const hasData = !!latestAssessment;
+    const { theme } = useAmbience();
 
-    // Derived stats & Hierarchy for Sunburst
     const data = useMemo(() => {
         const base = latestAssessment?.score || 50;
 
-        // Mock Sub-category values based on base score
-        const stats = {
-            sleep: Math.min(100, base * 1.2),
-            energy: Math.min(100, base * 1.5),
-            focus: Math.min(100, base * 0.9 + 20),
-            calm: Math.min(100, base + 10),
-            stress: Math.max(20, 100 - base), // Inverse
-            social: Math.min(100, base * 1.1 + 10),
-            resilience: Math.min(100, base * 1.3),
-        };
-
-        // Hierarchy
+        // Mapping psychological traits - normalized to 0-10 scale
         return [
-            {
-                name: 'Physical',
-                color: '#10b981', // Emerald
-                value: (stats.sleep + stats.energy) / 2,
-                children: [
-                    { name: 'Sleep', value: stats.sleep, color: '#34d399' },
-                    { name: 'Energy', value: stats.energy, color: '#6ee7b7' },
-                ]
-            },
-            {
-                name: 'Mental',
-                color: '#8b5cf6', // Violet
-                value: (stats.focus + stats.calm + stats.stress + stats.resilience) / 4,
-                children: [
-                    { name: 'Focus', value: stats.focus, color: '#a78bfa' },
-                    { name: 'Calm', value: stats.calm, color: '#c4b5fd' },
-                    { name: 'Has Stress', value: stats.stress, color: '#ddd6fe' }, // Label trick? Or just "Stress"
-                ]
-            },
-            {
-                name: 'Social',
-                color: '#f59e0b', // Amber
-                value: stats.social,
-                children: [
-                    { name: 'Social', value: stats.social, color: '#fbbf24' },
-                ]
-            }
+            { name: 'Resilience', value: Math.min(10, (base * 1.3) / 10), icon: '🛡️' },
+            { name: 'Focus', value: Math.min(10, (base * 0.9 + 20) / 10), icon: '🎯' },
+            { name: 'Calmness', value: Math.min(10, (base + 10) / 10), icon: '🌊' },
+            { name: 'Empathy', value: Math.min(10, (base * 1.1 + 10) / 10), icon: '❤️' },
         ];
     }, [latestAssessment]);
 
-    // Sunburst Dimensions
-    const size = 240; // Reduced from 320 to fit 22rem height
+    // Reduced size by 20% from original 360px
+    const size = 288;  // Was 360, now 288 (80% of 360)
     const center = size / 2;
-    const coreRadius = 40;
-    const innerRingRadius = 70;
-    const outerRingRadius = 100;
+    const innerRadius = 48;  // Was 60, now 48 (80% of 60)
+    const maxBarLength = 96;  // Was 120, now 96 (80% of 120)
 
-    // Pulse animation duration based on score (Lower score = Faster pulse/anxiety? Or Higher score = Stronger pulse?)
-    // Let's do a gentle breathing pulse.
-    const pulseDuration = '4s';
+    // Theme-aware color palette based on selected theme
+    const themeColors = useMemo(() => {
+        if (theme === 'lavender') {
+            return {
+                light: '#e9d5ff',    // Light lavender
+                medium: '#c084fc',   // Medium lavender
+                vibrant: '#9333ea'   // Vibrant purple
+            };
+        } else if (theme === 'pink') {
+            return {
+                light: '#fbcfe8',    // Light pink
+                medium: '#f472b6',   // Medium pink
+                vibrant: '#ec4899'   // Vibrant pink
+            };
+        }
+        // Default: green theme
+        return {
+            light: '#6ee7b7',    // Light mint
+            medium: '#34d399',   // Medium mint
+            vibrant: '#10b981'   // Vibrant emerald
+        };
+    }, [theme]);
 
-    // Helper to calc generic arc
-    const createArc = (startAngle: number, endAngle: number, innerR: number, outerR: number) => {
-        // Convert to radians
+    // Dynamic color helper based on score (0-10 scale) - Enhanced opacity for better visibility
+    const getBarColor = (score: number) => {
+        if (score < 4) return {
+            fill: themeColors.light,
+            opacity: 0.75  // Increased from 0.5
+        };
+        if (score < 7) return {
+            fill: themeColors.medium,
+            opacity: 0.85  // Increased from 0.65
+        };
+        return {
+            fill: themeColors.vibrant,
+            opacity: 0.95  // Increased from 0.75
+        };
+    };
+
+    const createRadialBar = (index: number, total: number, value: number) => {
+        const barLength = (value / 10) * maxBarLength;
+        const outerRadius = innerRadius + barLength;
+        const angleStep = 360 / total;
+        const startAngle = index * angleStep;
+        const endAngle = startAngle + angleStep - 8; // Gap between bars
+
         const start = (startAngle - 90) * (Math.PI / 180);
         const end = (endAngle - 90) * (Math.PI / 180);
 
-        const x1 = center + innerR * Math.cos(start);
-        const y1 = center + innerR * Math.sin(start);
-        const x2 = center + outerR * Math.cos(start);
-        const y2 = center + outerR * Math.sin(start);
-        const x3 = center + outerR * Math.cos(end);
-        const y3 = center + outerR * Math.sin(end);
-        const x4 = center + innerR * Math.cos(end);
-        const y4 = center + innerR * Math.sin(end);
+        const x1 = center + innerRadius * Math.cos(start);
+        const y1 = center + innerRadius * Math.sin(start);
+        const x2 = center + outerRadius * Math.cos(start);
+        const y2 = center + outerRadius * Math.sin(start);
+        const x3 = center + outerRadius * Math.cos(end);
+        const y3 = center + outerRadius * Math.sin(end);
+        const x4 = center + innerRadius * Math.cos(end);
+        const y4 = center + innerRadius * Math.sin(end);
 
-        // Large arc flag
         const largeArc = endAngle - startAngle > 180 ? 1 : 0;
 
-        return `M${x1},${y1} L${x2},${y2} A${outerR},${outerR} 0 ${largeArc},1 ${x3},${y3} L${x4},${y4} A${innerR},${innerR} 0 ${largeArc},0 ${x1},${y1} Z`;
+        // Path for radial bar segments
+        return `M${x1},${y1} L${x2},${y2} A${outerRadius},${outerRadius} 0 ${largeArc},1 ${x3},${y3} L${x4},${y4} A${innerRadius},${innerRadius} 0 ${largeArc},0 ${x1},${y1} Z`;
     };
-
-
-
-    const themeClass = theme === 'green' ? 'bg-emerald-50/60 border-4 border-emerald-200 backdrop-blur-md' :
-        theme === 'lavender' ? 'bg-purple-50/60 border-4 border-purple-200 backdrop-blur-md' :
-            'bg-rose-50/60 border-4 border-rose-200 backdrop-blur-md';
 
     return (
         <Card className={cn(
-            "p-6 relative overflow-hidden h-[22rem] flex flex-col items-center justify-between transition-colors duration-500",
-            themeClass
+            "p-6 relative overflow-hidden h-[22rem] flex flex-col items-center justify-between transition-all duration-500 rounded-[2rem] shadow-xl",
+            theme === 'lavender' ? "bg-purple-50/80 border border-purple-100/50" :
+                theme === 'pink' ? "bg-rose-50/80 border border-rose-100/50" :
+                    "bg-emerald-50/80 border border-emerald-50/50",
+            "backdrop-blur-3xl"
         )}>
-            <style>{`
-                @keyframes pulse-ring {
-                    0% { transform: scale(0.98); opacity: 0.8; }
-                    50% { transform: scale(1.02); opacity: 1; }
-                    100% { transform: scale(0.98); opacity: 0.8; }
-                }
-                .animate-pulse-slow {
-                    animation: pulse-ring ${pulseDuration} ease-in-out infinite;
-                    transform-origin: center;
-                }
-            `}</style>
-
-            <div className="w-full flex justify-between items-start z-10 mb-2">
-                <div>
-                    <h3 className="font-serif font-bold text-xl text-text">Inner Strength</h3>
-                    <p className="text-sm text-muted">Core Well-being & Balance</p>
-                </div>
+            <div className="w-full flex justify-between items-start z-10">
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex flex-col"
+                >
+                    <h3 className="font-serif font-semibold text-base text-[#1a3a3a] tracking-tight">Inner Strength</h3>
+                    <p className="text-[10px] font-semibold text-emerald-600/50 uppercase tracking-[0.25em] mt-0.5">Psychological Health Matrix</p>
+                </motion.div>
             </div>
 
             <div className="flex-1 flex items-center justify-center w-full relative">
-                {hasData ? (
-                    <div className="relative w-[320px] h-[320px] animate-in fade-in zoom-in duration-700">
-                        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="animate-pulse-slow">
-                            {/* Defs for soft gradients */}
-                            <defs>
-                                <radialGradient id="coreGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                                    <stop offset="0%" stopColor="#fff" stopOpacity="0.8" />
-                                    <stop offset="100%" stopColor="#f3f4f6" stopOpacity="1" />
-                                </radialGradient>
-                                <filter id="glow">
-                                    <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
-                                    <feMerge>
-                                        <feMergeNode in="coloredBlur" />
-                                        <feMergeNode in="SourceGraphic" />
-                                    </feMerge>
-                                </filter>
-                            </defs>
+                <AnimatePresence mode="wait">
+                    {hasData ? (
+                        <motion.div
+                            key="radial-chart"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                            className="relative"
+                        >
+                            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                                <defs>
+                                    {/* Glassmorphism filter for bars */}
+                                    <filter id="glassEffect">
+                                        <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+                                        <feOffset in="blur" dx="0" dy="2" result="offsetBlur" />
+                                        <feFlood floodColor="#ffffff" floodOpacity="0.3" result="offsetColor" />
+                                        <feComposite in="offsetColor" in2="offsetBlur" operator="in" result="offsetBlur" />
+                                        <feBlend in="SourceGraphic" in2="offsetBlur" mode="normal" />
+                                    </filter>
 
-                            {/* CORE: Center Circle */}
-                            <circle cx={center} cy={center} r={coreRadius} fill="url(#coreGradient)" stroke="#e5e7eb" strokeWidth="1" className="shadow-lg" />
+                                    {/* Outer glow for bars */}
+                                    <filter id="outerGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                        <feGaussianBlur stdDeviation="4" result="blur" />
+                                        <feFlood floodColor="#10b981" floodOpacity="0.4" result="glowColor" />
+                                        <feComposite in="glowColor" in2="blur" operator="in" result="softGlow" />
+                                        <feMerge>
+                                            <feMergeNode in="softGlow" />
+                                            <feMergeNode in="SourceGraphic" />
+                                        </feMerge>
+                                    </filter>
 
-                            {/* RINGS */}
-                            {data.map((category, i) => {
-                                // Calculate angle share based on equal weight for 3 main categories for symmetry, 
-                                // or weighted by value? Let's do equal weight (120deg) for clean design, 
-                                // fulfilling "Design: First ring divided into categories".
-                                const anglePerCategory = 360 / data.length; // 120
-                                const startAngle = i * anglePerCategory;
-                                const endAngle = startAngle + anglePerCategory - 2; // -2 deg gap
+                                    {/* Central glassmorphism backdrop */}
+                                    <filter id="centralGlass" x="-50%" y="-50%" width="200%" height="200%">
+                                        <feDropShadow dx="0" dy="4" stdDeviation="8" floodOpacity="0.15" />
+                                    </filter>
+                                </defs>
 
-                                // Start angle for children
-                                let childStartAngle = startAngle;
-                                const totalChildValue = category.children.length;
-                                const anglePerChild = (anglePerCategory - 2) / totalChildValue;
+                                {/* Target Grid - Concentric circles for 0-10 scale */}
+                                {[2, 4, 6, 8, 10].map(tick => (
+                                    <circle
+                                        key={tick}
+                                        cx={center} cy={center}
+                                        r={innerRadius + (tick / 10) * maxBarLength}
+                                        fill="none"
+                                        stroke="#cbd5e1"
+                                        strokeDasharray="2 6"
+                                        strokeOpacity="0.2"
+                                        strokeWidth="1"
+                                    />
+                                ))}
 
-                                // Generate Inner Ring Segment
-                                const innerSegmentPath = createArc(startAngle, endAngle, coreRadius + 5, innerRingRadius);
+                                {/* Scale markers - subtle tick labels */}
+                                {[2, 4, 6, 8, 10].map(tick => (
+                                    <text
+                                        key={`label-${tick}`}
+                                        x={center + innerRadius + (tick / 10) * maxBarLength + 8}
+                                        y={center + 4}
+                                        className="text-[8px] uppercase tracking-wider fill-slate-500 font-normal"
+                                        textAnchor="start"
+                                    >
+                                        {tick}
+                                    </text>
+                                ))}
 
-                                // Generate Outer Ring Segments
-                                const outerSegments = category.children.map((child, j) => {
-                                    const cStart = childStartAngle + (j * anglePerChild);
-                                    const cEnd = cStart + anglePerChild - 1; // -1 gap
-                                    return {
-                                        path: createArc(cStart, cEnd, innerRingRadius + 5, outerRingRadius),
-                                        color: child.color,
-                                        label: child.name,
-                                        value: child.value
-                                    };
-                                });
-
-                                return (
-                                    <g key={category.name}>
-                                        {/* Inner Ring: Category */}
-                                        <path
-                                            d={innerSegmentPath}
-                                            fill={category.color}
-                                            className="opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
-                                            filter="url(#glow)"
-                                        >
-                                            <title>{category.name}</title>
-                                        </path>
-
-                                        {/* Outer Ring: Sub-categories */}
-                                        {outerSegments.map(child => (
-                                            <path
-                                                key={child.label}
-                                                d={child.path}
-                                                fill={child.color}
-                                                className="opacity-80 hover:opacity-100 transition-opacity cursor-pointer"
+                                {data.map((trait, i) => {
+                                    const barStyle = getBarColor(trait.value);
+                                    return (
+                                        <motion.g key={trait.name}>
+                                            <motion.path
+                                                initial={{ d: createRadialBar(i, data.length, 0) }}
+                                                animate={{ d: createRadialBar(i, data.length, trait.value) }}
+                                                transition={{ delay: i * 0.15, duration: 1.4, ease: "circOut" }}
+                                                fill={barStyle.fill}
+                                                fillOpacity={barStyle.opacity}
+                                                stroke="white"
+                                                strokeWidth="2"
+                                                className="cursor-pointer transition-all duration-500"
+                                                filter="url(#outerGlow)"
+                                                whileHover={{
+                                                    fillOpacity: barStyle.opacity + 0.15,
+                                                    scale: 1.02
+                                                }}
                                             >
-                                                <title>{child.label}: {Math.round(child.value)}%</title>
-                                            </path>
-                                        ))}
+                                                <title>{trait.name}: {Math.round(trait.value * 10) / 10}/10</title>
+                                            </motion.path>
 
-                                        {/* Category Label (Approximate placement) */}
-                                        {/* We won't place text on arc for simplicity in this iteration unless needed */}
-                                    </g>
-                                );
-                            })}
-                        </svg>
+                                            {/* Dynamic Label Placement - further out */}
+                                            {(() => {
+                                                const angle = (i * (360 / data.length) + (360 / data.length) / 2 - 4 - 90) * (Math.PI / 180);
+                                                const labelRadius = innerRadius + maxBarLength + 28;
+                                                return (
+                                                    <text
+                                                        x={center + labelRadius * Math.cos(angle)}
+                                                        y={center + labelRadius * Math.sin(angle)}
+                                                        textAnchor="middle"
+                                                        className="text-[9px] font-normal fill-slate-600 uppercase tracking-wide"
+                                                        style={{ letterSpacing: '0.08em' }}
+                                                    >
+                                                        {trait.name}
+                                                    </text>
+                                                );
+                                            })()}
+                                        </motion.g>
+                                    );
+                                })}
 
-                        {/* Core Label Overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div className="text-center z-20">
-                                <span className="block text-2xl font-serif font-bold text-gray-700">{Math.round(latestAssessment?.score || 0)}</span>
-                                <span className="block text-[8px] text-muted uppercase tracking-widest">Score</span>
+                                {/* Central glassmorphism circle */}
+                                <motion.circle
+                                    cx={center} cy={center} r={innerRadius - 8}
+                                    fill="white"
+                                    fillOpacity={0.85}
+                                    filter="url(#centralGlass)"
+                                    className="backdrop-blur-2xl"
+                                />
+                            </svg>
+
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <motion.div
+                                    animate={{
+                                        scale: [1, 1.04, 1],
+                                        opacity: [0.95, 1, 0.95]
+                                    }}
+                                    transition={{
+                                        duration: 3.5,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                    }}
+                                    className="text-center relative z-10"
+                                >
+                                    <span className="text-[2rem] leading-none font-serif font-bold text-[#1a3a3a] tracking-tight">
+                                        {Math.round(latestAssessment?.score || 0)}
+                                    </span>
+                                    <span className="block text-[0.6rem] font-normal text-emerald-600/50 uppercase tracking-[0.3em] -mt-1.5">
+                                        Score
+                                    </span>
+                                </motion.div>
                             </div>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="text-center p-8 animate-in fade-in duration-500 max-w-sm">
-                        <div className={cn(
-                            "w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 border-2 shadow-sm transition-colors",
-                            theme === 'green' ? 'bg-green-50 border-green-100 text-green-500'
-                                : theme === 'lavender' ? 'bg-purple-50 border-purple-100 text-purple-500'
-                                    : 'bg-rose-50 border-rose-100 text-rose-500'
-                        )}>
-                            <Sprout size={40} className="opacity-60" />
-                        </div>
-                        <h4 className="font-serif font-bold text-xl text-text mb-2">Core Well-being</h4>
-                        <p className="text-sm text-muted leading-relaxed">
-                            Take your first assessment to visualize your inner layers.
-                        </p>
-                    </div>
-                )}
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="empty"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-center p-8"
+                        >
+                            <div className="w-20 h-20 rounded-3xl bg-emerald-50 flex items-center justify-center mx-auto mb-6 shadow-sm border border-emerald-100">
+                                <Sprout size={32} className="text-emerald-400 opacity-60" />
+                            </div>
+                            <h4 className="font-serif font-bold text-xl text-[#1a3a3a] mb-2">Matrix Loading</h4>
+                            <p className="text-xs text-slate-400 font-medium max-w-[200px] leading-relaxed">
+                                Complete your assessment to generate your psychological health matrix.
+                            </p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {hasData && (
-                <div className="flex flex-wrap justify-center gap-4 mt-2">
-                    {data.map(cat => (
-                        <div key={cat.name} className="flex items-center gap-1.5">
-                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                            <span className="text-xs font-medium text-text">{cat.name}</span>
+                <div className="w-full mt-4">
+                    <div className="flex justify-center gap-4 text-[10px] font-semibold uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full ring-2 ring-white shadow-sm" style={{ backgroundColor: themeColors.light, opacity: 0.7 }} />
+                            <span className="text-slate-500">Growing</span>
                         </div>
-                    ))}
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full ring-2 ring-white shadow-sm" style={{ backgroundColor: themeColors.medium, opacity: 0.7 }} />
+                            <span className="text-slate-500">Balanced</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full ring-2 ring-white shadow-sm" style={{ backgroundColor: themeColors.vibrant, opacity: 0.7 }} />
+                            <span className="text-slate-500">Strength</span>
+                        </div>
+                    </div>
                 </div>
             )}
         </Card>

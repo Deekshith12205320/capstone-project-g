@@ -1,7 +1,28 @@
 {
   "id": "cbi_burnout",
   "title": "Copenhagen Burnout Inventory",
-  "scale": "0=Never, 1=Rarely, 2=Sometimes, 3=Often, 4=Always",
+  "scale": [
+    {
+      "value": 0,
+      "label": "Never"
+    },
+    {
+      "value": 1,
+      "label": "Rarely"
+    },
+    {
+      "value": 2,
+      "label": "Sometimes"
+    },
+    {
+      "value": 3,
+      "label": "Often"
+    },
+    {
+      "value": 4,
+      "label": "Always"
+    }
+  ],
   "items": [
     "How often do you feel tired?",
     "How often are you physically exhausted?",
@@ -14,5 +35,8 @@
     "Are you exhausted in the morning at the thought of another day at work?",
     "Do you feel that every working hour is tiring for you?"
   ],
-  "range": [0, 4]
+  "range": [
+    0,
+    4
+  ]
 }

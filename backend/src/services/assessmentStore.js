@@ -5,25 +5,16 @@ import { AssessmentResult } from '../models/AssessmentResult.js';
  * Save latest assessment summary for a user
  */
 export async function saveLatestAssessment(userId, summary) {
-  try {
-    const result = new AssessmentResult({
-      userId,
-      type: summary.assessment, // Map 'assessment' -> 'type' (legacy naming compat if needed)
-      score: summary.score,
-      severity: summary.severity,
-      answers: [], // We might need to pass answers here if we want to store them
-      timestamp: new Date()
-    });
+  const result = new AssessmentResult({
+    userId,
+    type: summary.assessment, // Map 'assessment' -> 'type' (legacy naming compat if needed)
+    score: summary.score,
+    severity: summary.severity,
+    answers: summary.answers || [],
+    timestamp: new Date()
+  });
 
-    // If summary has answers (it should from the route), use them
-    if (summary.answers) {
-      result.answers = summary.answers;
-    }
-
-    await result.save();
-  } catch (err) {
-    console.error('Error saving assessment result:', err);
-  }
+  await result.save();
 }
 
 /**
@@ -60,10 +51,13 @@ export async function getAssessmentHistory(userId) {
       .lean();
 
     return history.map(h => ({
+      id: h._id,
       date: h.timestamp.toISOString().split('T')[0], // YYYY-MM-DD
+      timestamp: h.timestamp,
       score: h.score,
       severity: h.severity,
-      type: h.type
+      type: h.type,
+      answers: h.answers
     }));
   } catch (err) {
     console.error('Error fetching assessment history:', err);
