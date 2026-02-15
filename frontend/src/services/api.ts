@@ -1,7 +1,7 @@
-// Use relative path for production (Vercel rewrite handles /api -> backend)
-// For local development, Vite proxy or CORS on backend handles 8080.
-// But since we are deploying, relative path is safest to avoid "Local Network Access" prompt.
-const API_URL = import.meta.env.VITE_API_URL || '';
+// Use /api prefix for all requests.
+// - Local dev: Vite proxies /api -> localhost:8080 (stripping /api)
+// - Production: Vercel rewrites /api -> backend function (we strip /api there too)
+const API_URL = '/api';
 
 
 export interface Question {
