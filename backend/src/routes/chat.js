@@ -101,8 +101,7 @@ router.post('/', async (req, res, next) => {
     // -------------------------------------------------------------------------
     // 💡 Assessment Suggestion Logic (Keyword-based or AI-driven)
     // -------------------------------------------------------------------------
-    let suggestion = null;
-    const lowerText = text.toLowerCase();
+
 
     // -------------------------------------------------------------------------
     // 💡 Assessment Suggestion Logic (Context-Aware)
