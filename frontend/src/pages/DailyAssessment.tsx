@@ -36,10 +36,9 @@ export default function DailyAssessment() {
         const newAnswers = { ...answers, [currentIndex]: value };
         setAnswers(newAnswers);
 
+        // Only auto-advance, don't auto-submit on last question
         if (currentIndex < questions.length - 1) {
             setCurrentIndex(currentIndex + 1);
-        } else {
-            handleSubmit(newAnswers);
         }
     };
 
@@ -167,9 +166,21 @@ export default function DailyAssessment() {
                         >
                             Previous
                         </Button>
-                        <span className="text-sm text-muted self-center">
-                            {answers[currentIndex] !== undefined ? 'Click an option to continue' : 'Select an answer'}
-                        </span>
+
+                        {/* Show Submit button on last question if answered */}
+                        {currentIndex === questions.length - 1 && answers[currentIndex] !== undefined ? (
+                            <Button
+                                onClick={() => handleSubmit(answers)}
+                                size="lg"
+                                className="px-8"
+                            >
+                                Submit Assessment
+                            </Button>
+                        ) : (
+                            <span className="text-sm text-muted self-center">
+                                {answers[currentIndex] !== undefined ? 'Click an option to continue' : 'Select an answer'}
+                            </span>
+                        )}
                     </div>
                 </Card>
             </div>

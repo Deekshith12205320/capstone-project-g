@@ -107,18 +107,36 @@ export async function startAssessment(type: string): Promise<ChatResponse> {
 
         const data = await response.json();
 
-        // Map backend response to ChatResponse format
-        return {
-            assessment: true,
-            type: type,
-            questions: data.items.map((item: any, index: number) => ({
-                id: index.toString(), // or item.id if available
-                text: item.question,
+        // Handle two formats:
+        // 1. Old format: items are strings, global scale
+        // 2. New format (daily): items have question + scale properties
+        const questions = data.items.map((item: any, index: number) => {
+            // Check if item is an object with 'question' field (new format)
+            if (typeof item === 'object' && item.question) {
+                return {
+                    id: index.toString(),
+                    text: item.question,
+                    options: item.scale.map((scalePoint: any) => ({
+                        text: scalePoint.label,
+                        value: scalePoint.value
+                    }))
+                };
+            }
+            // Old format: item is a string, use global scale
+            return {
+                id: index.toString(),
+                text: item,
                 options: data.scale.map((scalePoint: any) => ({
                     text: scalePoint.label,
                     value: scalePoint.value
                 }))
-            }))
+            };
+        });
+
+        return {
+            assessment: true,
+            type: type,
+            questions
         };
     } catch (error) {
         console.error('Error starting assessment:', error);

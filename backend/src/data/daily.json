@@ -2,33 +2,10 @@
     "id": "daily",
     "title": "Daily Wellbeing Check-in",
     "description": "A comprehensive daily assessment to track your mental and emotional wellbeing.",
-    "scale": [
-        {
-            "value": 0,
-            "label": "Option 0"
-        },
-        {
-            "value": 1,
-            "label": "Option 1"
-        },
-        {
-            "value": 2,
-            "label": "Option 2"
-        },
-        {
-            "value": 3,
-            "label": "Option 3"
-        },
-        {
-            "value": 4,
-            "label": "Option 4"
-        }
-    ],
     "items": [
         {
             "question": "Over the last 2 weeks, how often have you felt little interest or pleasure in doing things?",
-            "type": "frequency",
-            "options": [
+            "scale": [
                 {
                     "value": 0,
                     "label": "Not at all"
@@ -49,8 +26,7 @@
         },
         {
             "question": "I feel able to manage the daily stresses of my life.",
-            "type": "likert",
-            "options": [
+            "scale": [
                 {
                     "value": 0,
                     "label": "Strongly Disagree"
@@ -75,8 +51,7 @@
         },
         {
             "question": "Have you experienced significant changes in your sleep patterns (insomnia or oversleeping)?",
-            "type": "boolean",
-            "options": [
+            "scale": [
                 {
                     "value": 0,
                     "label": "No"
@@ -89,8 +64,7 @@
         },
         {
             "question": "How would you rate your average energy levels throughout the day?",
-            "type": "scale10",
-            "options": [
+            "scale": [
                 {
                     "value": 0,
                     "label": "1 - Constantly exhausted"
@@ -135,8 +109,7 @@
         },
         {
             "question": "Do you feel a sense of belonging or connection to the people around you?",
-            "type": "multiplechoice",
-            "options": [
+            "scale": [
                 {
                     "value": 3,
                     "label": "Very connected"
@@ -157,8 +130,7 @@
         },
         {
             "question": "How often do you find yourself \"spiraling\" or overthinking negative scenarios?",
-            "type": "frequency",
-            "options": [
+            "scale": [
                 {
                     "value": 0,
                     "label": "Rarely"
@@ -179,8 +151,7 @@
         },
         {
             "question": "I feel optimistic about my future.",
-            "type": "likert",
-            "options": [
+            "scale": [
                 {
                     "value": 0,
                     "label": "Strongly Disagree"
@@ -205,8 +176,7 @@
         },
         {
             "question": "In the past month, have you felt \"numb\" or detached from your emotions?",
-            "type": "boolean",
-            "options": [
+            "scale": [
                 {
                     "value": 0,
                     "label": "No"
@@ -219,8 +189,7 @@
         },
         {
             "question": "How easy is it for you to concentrate on tasks (work, reading, or chores)?",
-            "type": "difficulty",
-            "options": [
+            "scale": [
                 {
                     "value": 3,
                     "label": "Very Easy"
@@ -241,8 +210,7 @@
         },
         {
             "question": "When you make a mistake, what is your primary internal reaction?",
-            "type": "multiplechoice",
-            "options": [
+            "scale": [
                 {
                     "value": 3,
                     "label": "Learning/Growth"
