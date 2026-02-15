@@ -34,3 +34,16 @@ export function interpretBurnout(score) {
   if (score <= 66) return 'moderate';
   return 'high';
 }
+
+// ---------- Daily Wellbeing Check-in ----------
+// Score range: 0-35 (sum of all values)
+// Higher score = better wellbeing
+export function interpretDaily(score) {
+  // Invert scoring: higher is better for daily check-in
+  const percentage = (score / 35) * 100;
+
+  if (percentage >= 70) return 'excellent';   // 25-35: Thriving
+  if (percentage >= 50) return 'good';        // 17-24: Managing well
+  if (percentage >= 30) return 'fair';        // 11-16: Some struggles
+  return 'concerning';                         // 0-10: Need support
+}

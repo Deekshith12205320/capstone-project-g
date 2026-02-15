@@ -13,6 +13,7 @@ import SpotifyCallback from './pages/SpotifyCallback';
 import Games from './pages/Games';
 import SupportNetwork from './pages/SupportNetwork';
 import MusicLibrary from './pages/MusicLibrary';
+import DailyAssessment from './pages/DailyAssessment';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useEffect } from 'react';
 
@@ -37,6 +38,7 @@ function AppRoutes() {
           <Route path="/games" element={<Games />} />
           <Route path="/support" element={<SupportNetwork />} />
           <Route path="/library" element={<MusicLibrary />} />
+          <Route path="/assessment/daily" element={<DailyAssessment />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
         </Route>

@@ -59,7 +59,7 @@ export default function Dashboard() {
                 <DailyAssessmentCard
                     daysActive={stats?.daysActive || 0}
                     avgMood={stats?.avgMood || 0}
-                    onStartAssessment={() => navigate('/chat', { state: { initialMessage: "I want to take a daily assessment" } })}
+                    onStartAssessment={() => navigate('/assessment/daily')}
                 />
             </div>
 

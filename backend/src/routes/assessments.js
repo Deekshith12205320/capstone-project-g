@@ -16,7 +16,8 @@ import {
   interpretPHQ9,
   interpretGAD7,
   interpretPSS10,
-  interpretBurnout
+  interpretBurnout,
+  interpretDaily
 } from '../services/scoring.js';
 
 import {
@@ -94,6 +95,7 @@ router.post('/submit', async (req, res) => {
     if (type === 'gad7') severity = interpretGAD7(score);
     if (type === 'pss10') severity = interpretPSS10(score);
     if (type === 'burnout') severity = interpretBurnout(score);
+    if (type === 'daily') severity = interpretDaily(score);
 
     // ---------------------------------------------------------------------------
     // Analytics (aggregate only, privacy-safe)
