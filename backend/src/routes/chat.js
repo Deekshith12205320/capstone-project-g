@@ -10,7 +10,9 @@ import { getCrisisResponse } from '../services/crisisResponse.js';
 import { getLatestAssessment } from '../services/assessmentStore.js';
 import {
   addMessage,
-  getConversationContext
+  getConversationContext,
+  getHistory,
+  clearHistory
 } from '../services/conversationMemory.js';
 import {
   trackChat,
@@ -105,6 +107,26 @@ router.post('/', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+// -----------------------------------------------------------------------------
+// GET /chat/history
+// Returns recent conversation history
+// -----------------------------------------------------------------------------
+router.get('/history', (req, res) => {
+  const userId = req.user.userId;
+  const history = getHistory(userId);
+  res.json(history);
+});
+
+// -----------------------------------------------------------------------------
+// DELETE /chat/history
+// Clears conversation history
+// -----------------------------------------------------------------------------
+router.delete('/history', (req, res) => {
+  const userId = req.user.userId;
+  clearHistory(userId);
+  res.json({ success: true, message: 'History cleared' });
 });
 
 export default router;

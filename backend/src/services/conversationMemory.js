@@ -17,6 +17,7 @@ export function addMessage(userId, role, content) {
   memory.set(userId, updated);
 }
 
+
 export function getConversationContext(userId) {
   const convo = memory.get(userId);
   if (!convo || convo.length === 0) return '';
@@ -24,4 +25,19 @@ export function getConversationContext(userId) {
   return convo
     .map(m => `${m.role}: ${m.content}`)
     .join('\n');
+}
+
+export function getHistory(userId) {
+  const convo = memory.get(userId) || [];
+  return convo.map((m, index) => ({
+    id: index, // Simple index ID for now
+    role: m.role === 'assistant' ? 'ai' : 'user', // Map 'assistant' -> 'ai' for frontend
+    content: m.content,
+    timestamp: new Date(m.time).toISOString(),
+    is_crisis: 0
+  }));
+}
+
+export function clearHistory(userId) {
+  memory.delete(userId);
 }

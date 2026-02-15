@@ -95,15 +95,31 @@ export async function sendMessage(text: string): Promise<ChatResponse> {
 
 export async function startAssessment(type: string): Promise<ChatResponse> {
     try {
-        const response = await fetch(`${API_URL}/chat`, {
-            method: 'POST',
+        const response = await fetch(`${API_URL}/assessments/${type}`, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 ...getAuthHeader()
             },
-            body: JSON.stringify({ action: 'start_assessment', type }),
         });
-        return await response.json();
+
+        if (!response.ok) throw new Error('Failed to start assessment');
+
+        const data = await response.json();
+
+        // Map backend response to ChatResponse format
+        return {
+            assessment: true,
+            type: type,
+            questions: data.items.map((item: any, index: number) => ({
+                id: index.toString(), // or item.id if available
+                text: item.question,
+                options: data.scale.map((scalePoint: any) => ({
+                    text: scalePoint.label,
+                    value: scalePoint.value
+                }))
+            }))
+        };
     } catch (error) {
         console.error('Error starting assessment:', error);
         throw error;
@@ -112,15 +128,30 @@ export async function startAssessment(type: string): Promise<ChatResponse> {
 
 export async function submitAssessment(type: string, answers: Record<string, number>): Promise<ChatResponse> {
     try {
-        const response = await fetch(`${API_URL}/chat`, {
+        // Convert record to array of values for backend
+        // Assuming keys are '0', '1', '2' indices from the questions array
+        const answersArray = Object.keys(answers).sort().map(k => answers[k]);
+
+        const response = await fetch(`${API_URL}/assessments/submit`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 ...getAuthHeader()
             },
-            body: JSON.stringify({ action: 'submit_assessment', type, answers }),
+            body: JSON.stringify({ type, answers: answersArray }),
         });
-        return await response.json();
+
+        if (!response.ok) throw new Error('Failed to submit assessment');
+
+        const data = await response.json();
+
+        // Return result as a chat reply
+        return {
+            reply: `Assessment complete. Your score is ${data.score}. Severity: ${data.severity}.`,
+            assessmentComplete: true,
+            score: data.score,
+            severity: data.severity
+        };
     } catch (error) {
         console.error('Error submitting assessment:', error);
         throw error;
