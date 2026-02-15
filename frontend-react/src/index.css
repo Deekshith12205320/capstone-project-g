@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+@theme {
+  /* Calm Color Palette */
+  --color-pale-green: #d4f1d4;
+  --color-green: #4caf50;
+  --color-pale-lavender: #e8e0f5;
+  --color-lavender: #9c88c4;
+  --color-rose-pink: #f4c2c2;
+  --color-skin: #fad7b8;
+
+  /* Semantic mappings */
+  --color-primary: #9c88c4;
+  --color-secondary: #4caf50;
+  --color-accent: #f4c2c2;
+  --color-background: #e8e0f5;
+  --color-surface: rgba(255, 255, 255, 0.85);
+  --color-text: #333333;
+  --color-muted: #666666;
+
+  --font-sans: Inter, sans-serif;
+  --font-serif: "Playfair Display", serif;
+}
+
+@layer base {
+  body {
+    background: linear-gradient(135deg, #d4f1d4 0%, #e8e0f5 100%);
+    background-attachment: fixed;
+    @apply text-text font-sans antialiased;
+    /* Default mouse position off-screen to avoid weird initial flash */
+    --mouse-x: -1000px;
+    --mouse-y: -1000px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif;
+  }
+}
+
+/* Enhanced Hover Effects */
+.spotlight-card:hover {
+  box-shadow: 0 0 20px rgba(156, 136, 196, 0.25);
+  border-color: rgba(156, 136, 196, 0.4);
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/50 backdrop-blur-md border border-white/40 shadow-sm;
+  }
+
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-1 hover:shadow-md;
+  }
+
+  /* Button hover effects with ripple */
+  .btn-hover {
+    @apply transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-hover::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.2s ease, height 0.2s ease;
+    pointer-events: none;
+  }
+
+  .btn-hover:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  /* Card hover effects */
+  .card-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
+    border: 2px solid transparent;
+  }
+
+  .card-hover:hover {
+    border-color: #9c88c4;
+  }
+
+  /* Input focus effects */
+  .input-enhanced {
+    @apply transition-all duration-300 border-2 border-pale-lavender;
+  }
+
+  .input-enhanced:focus {
+    border-color: #9c88c4;
+    box-shadow: 0 0 0 3px rgba(156, 136, 196, 0.1);
+    outline: none;
+  }
+
+  .input-enhanced:hover {
+    border-color: #9c88c4;
+  }
+
+  /* Message bubble effects */
+  .message-bubble {
+    @apply transition-all duration-300 hover:scale-[1.02] hover:shadow-md;
+  }
+
+  /* Gradient backgrounds */
+  .bg-calm-gradient {
+    background: linear-gradient(135deg, #d4f1d4 0%, #e8e0f5 100%);
+  }
+
+  .bg-lavender-gradient {
+    background: linear-gradient(135deg, #e8e0f5 0%, #9c88c4 100%);
+  }
+
+  .bg-green-gradient {
+    background: linear-gradient(135deg, #d4f1d4 0%, #4caf50 100%);
+  }
+}

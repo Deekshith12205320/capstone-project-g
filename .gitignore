@@ -1,0 +1,10 @@
+# dependencies
+node_modules/
+
+# environment variables
+.env
+
+# OS + editor junk
+.DS_Store
+Thumbs.db
+*.log

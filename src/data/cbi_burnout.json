@@ -1,0 +1,18 @@
+{
+  "id": "cbi_burnout",
+  "title": "Copenhagen Burnout Inventory",
+  "scale": "0=Never, 1=Rarely, 2=Sometimes, 3=Often, 4=Always",
+  "items": [
+    "How often do you feel tired?",
+    "How often are you physically exhausted?",
+    "How often are you emotionally exhausted?",
+    "How often do you think: 'I can’t take it anymore'?",
+    "How often do you feel worn out?",
+    "How often do you feel weak and susceptible to illness?",
+    "Do you feel that your work drains your energy?",
+    "Do you feel worn out at the end of the working day?",
+    "Are you exhausted in the morning at the thought of another day at work?",
+    "Do you feel that every working hour is tiring for you?"
+  ],
+  "range": [0, 4]
+}

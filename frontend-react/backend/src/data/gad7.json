@@ -1,0 +1,15 @@
+{
+  "id": "gad7",
+  "title": "GAD-7 (Generalized Anxiety Disorder Screening)",
+  "scale": "0=Not at all, 1=Several days, 2=More than half the days, 3=Nearly every day",
+  "items": [
+    "Feeling nervous, anxious, or on edge",
+    "Not being able to stop or control worrying",
+    "Worrying too much about different things",
+    "Trouble relaxing",
+    "Being so restless that it is hard to sit still",
+    "Becoming easily annoyed or irritable",
+    "Feeling afraid as if something awful might happen"
+  ],
+  "range": [0, 3]
+}
