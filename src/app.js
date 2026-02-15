@@ -27,8 +27,6 @@ app.use(morgan('tiny'));
 app.use(cors());
 app.use(express.json({ limit: '200kb' }));
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, '../public')));
 
 // attach request context
 app.use((req, _res, next) => {
