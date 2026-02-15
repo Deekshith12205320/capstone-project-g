@@ -1,7 +1,5 @@
-// Use /api prefix for all requests.
-// - Local dev: Vite proxies /api -> localhost:8080 (stripping /api)
-// - Production: Vercel rewrites /api -> backend function (we strip /api there too)
-const API_URL = '/api';
+// Use VITE_API_URL if provided (Render), otherwise fallback to /api (Vercel/Local with proxy)
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 
 export interface Question {
