@@ -1,5 +1,13 @@
 // Use VITE_API_URL if provided (Render), otherwise fallback to /api (Vercel/Local with proxy)
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+let apiUrl = import.meta.env.VITE_API_URL || '/api';
+
+// Render's 'host' property usually returns just the domain (e.g. app.onrender.com)
+// So we ensure it starts with https:// if it's not a relative path
+if (apiUrl !== '/api' && !apiUrl.startsWith('http')) {
+    apiUrl = `https://${apiUrl}`;
+}
+
+const API_URL = apiUrl;
 
 
 export interface Question {
