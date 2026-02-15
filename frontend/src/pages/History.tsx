@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { ChevronRight, Plus, X, Award, FileText, Activity, MessageSquare, Bot, User, ArrowUpRight } from 'lucide-react';
+import { ChevronRight, X, Award, FileText, Activity, MessageSquare, Bot, User, ArrowUpRight } from 'lucide-react';
 import { fetchAssessments, fetchHistory, type AssessmentResult, type HistoryMessage } from '../services/api';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';

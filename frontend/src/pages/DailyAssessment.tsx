@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { startAssessment, submitAssessment, type Question } from '../services/api';
 import { cn } from '../lib/utils';
 
@@ -12,9 +12,6 @@ export default function DailyAssessment() {
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, number>>({});
-    const [isComplete, setIsComplete] = useState(false);
-    const [score, setScore] = useState(0);
-    const [severity, setSeverity] = useState('');
 
     useEffect(() => {
         const loadAssessment = async () => {
