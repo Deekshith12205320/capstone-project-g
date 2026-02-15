@@ -20,11 +20,13 @@ services:
         value: 10000
 
   # Frontend Static Site
-  - type: static
+  - type: web
     name: student-wellbeing-frontend
+    env: static
+    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         fromService:
