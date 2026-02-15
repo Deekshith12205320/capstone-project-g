@@ -273,3 +273,33 @@ export async function updateUserProfile(profile: Partial<UserProfile>): Promise<
         return false;
     }
 }
+
+export interface DashboardStats {
+    daysActive: number;
+    avgMood: number;
+    totalAssessments: number;
+    history: {
+        date: string;
+        score: number;
+        severity: string;
+        type: string;
+    }[];
+}
+
+export async function fetchDashboardStats(): Promise<DashboardStats> {
+    try {
+        const response = await fetch(`${API_URL}/dashboard/stats`, {
+            headers: getAuthHeader()
+        });
+        if (!response.ok) throw new Error('Failed to fetch dashboard stats');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        return {
+            daysActive: 1,
+            avgMood: 50,
+            totalAssessments: 0,
+            history: []
+        };
+    }
+}

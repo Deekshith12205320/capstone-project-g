@@ -12,6 +12,7 @@ import chatRouter from './routes/chat.js';
 import assessmentsRouter from './routes/assessments.js';
 import suggestionsRouter from './routes/suggestions.js';
 import actionsRouter from './routes/actions.js';
+import statsRouter from './routes/dashboard/stats.js';
 import adminRouter from './routes/admin.js';
 import authRouter from './routes/auth.js';
 
@@ -55,6 +56,7 @@ app.use('/chat', requireAuth, chatRouter);
 app.use('/assessments', requireAuth, assessmentsRouter);
 app.use('/suggestions', requireAuth, suggestionsRouter);
 app.use('/actions', requireAuth, actionsRouter);
+app.use('/dashboard', requireAuth, statsRouter);
 
 // admin (can add role checks later)
 app.use('/admin', requireAuth, adminRouter);

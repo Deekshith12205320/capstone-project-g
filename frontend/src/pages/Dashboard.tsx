@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react';
 import MoodFlow from '../components/dashboard/MoodFlow';
 import JournalCard from '../components/dashboard/JournalCard';
-import MoodSelector from '../components/dashboard/MoodSelector';
 import MentalGarden from '../components/dashboard/MentalGarden';
 import MentalFitnessQuests from '../components/games/MentalFitnessQuests';
 import SpotifyPlayer from '../components/dashboard/SpotifyPlayer';
 import { fetchAssessments, fetchUserProfile, type AssessmentResult } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
+import { useNavigate } from 'react-router-dom';
+import { DailyAssessmentCard } from '../components/dashboard/DailyAssessmentCard';
+import { fetchDashboardStats, type DashboardStats } from '../services/api';
 export default function Dashboard() {
     const { user: authUser } = useAuth();
+    const navigate = useNavigate();
     const [displayName, setDisplayName] = useState(authUser?.name?.split(' ')[0] || 'User');
     const [assessments, setAssessments] = useState<AssessmentResult[]>([]);
     const [latestAssessment, setLatestAssessment] = useState<AssessmentResult | null>(null);
+    const [stats, setStats] = useState<DashboardStats | null>(null);
 
     useEffect(() => {
         const loadData = async () => {
+            // Load Dashboard Stats
+            const dashboardData = await fetchDashboardStats();
+            setStats(dashboardData);
+
             // Load Assessments
             const data = await fetchAssessments();
             setAssessments(data);
@@ -48,7 +55,13 @@ export default function Dashboard() {
                 </div>
             </header>
 
-            <MoodSelector />
+            <div className="mb-8">
+                <DailyAssessmentCard
+                    daysActive={stats?.daysActive || 0}
+                    avgMood={stats?.avgMood || 0}
+                    onStartAssessment={() => navigate('/chat', { state: { initialMessage: "I want to take a daily assessment" } })}
+                />
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                 {/* Left Column - Mood Chart */}

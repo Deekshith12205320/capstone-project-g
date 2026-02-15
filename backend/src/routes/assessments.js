@@ -60,85 +60,100 @@ router.get('/:type', (req, res) => {
 // POST /assessments/submit
 // Scores assessment, stores latest summary, updates AI mental state
 // -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// POST /assessments/submit
+// Scores assessment, stores latest summary, updates AI mental state
+// -----------------------------------------------------------------------------
 const submitSchema = z.object({
   type: z.string(),
   answers: z.array(z.number().min(0).max(4))
 });
 
-router.post('/submit', (req, res) => {
-  const { type, answers } = submitSchema.parse(req.body);
-  const assessment = getAssessment(type);
+router.post('/submit', async (req, res) => {
+  try {
+    const { type, answers } = submitSchema.parse(req.body);
+    const assessment = getAssessment(type);
 
-  if (!assessment) {
-    return res.status(404).json({ error: 'Assessment not found' });
-  }
+    if (!assessment) {
+      return res.status(404).json({ error: 'Assessment not found' });
+    }
 
-  if (answers.length !== assessment.items.length) {
-    return res.status(400).json({
-      error: 'Answer count does not match number of questions'
+    if (answers.length !== assessment.items.length) {
+      return res.status(400).json({
+        error: 'Answer count does not match number of questions'
+      });
+    }
+
+    // ---------------------------------------------------------------------------
+    // Score assessment
+    // ---------------------------------------------------------------------------
+    const score = scoreLikert(answers);
+
+    let severity = 'unknown';
+    if (type === 'phq9') severity = interpretPHQ9(score);
+    if (type === 'gad7') severity = interpretGAD7(score);
+    if (type === 'pss10') severity = interpretPSS10(score);
+    if (type === 'burnout') severity = interpretBurnout(score);
+
+    // ---------------------------------------------------------------------------
+    // Analytics (aggregate only, privacy-safe)
+    // ---------------------------------------------------------------------------
+    trackAssessment(type, severity);
+
+    // ---------------------------------------------------------------------------
+    // Authenticated user identity (JWT / Google OAuth)
+    // ---------------------------------------------------------------------------
+    const userId = req.user.userId;
+
+    const summary = {
+      assessment: type,
+      score,
+      severity,
+      submittedAt: Date.now(),
+      answers // Pass answers to store
+    };
+
+    // ---------------------------------------------------------------------------
+    // Persist assessment summary
+    // ---------------------------------------------------------------------------
+    await saveLatestAssessment(userId, summary);
+
+    // ---------------------------------------------------------------------------
+    // ✅ STEP 7.2 — Store severity for AI behavior adaptation
+    // ---------------------------------------------------------------------------
+    setUserSeverity(userId, type, severity);
+
+    res.json({
+      ...summary,
+      message: 'Assessment submitted successfully'
     });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to submit assessment' });
   }
-
-  // ---------------------------------------------------------------------------
-  // Score assessment
-  // ---------------------------------------------------------------------------
-  const score = scoreLikert(answers);
-
-  let severity = 'unknown';
-  if (type === 'phq9') severity = interpretPHQ9(score);
-  if (type === 'gad7') severity = interpretGAD7(score);
-  if (type === 'pss10') severity = interpretPSS10(score);
-  if (type === 'burnout') severity = interpretBurnout(score);
-
-  // ---------------------------------------------------------------------------
-  // Analytics (aggregate only, privacy-safe)
-  // ---------------------------------------------------------------------------
-  trackAssessment(type, severity);
-
-  // ---------------------------------------------------------------------------
-  // Authenticated user identity (JWT / Google OAuth)
-  // ---------------------------------------------------------------------------
-  const userId = req.user.userId;
-
-  const summary = {
-    assessment: type,
-    score,
-    severity,
-    submittedAt: Date.now()
-  };
-
-  // ---------------------------------------------------------------------------
-  // Persist assessment summary
-  // ---------------------------------------------------------------------------
-  saveLatestAssessment(userId, summary);
-
-  // ---------------------------------------------------------------------------
-  // ✅ STEP 7.2 — Store severity for AI behavior adaptation
-  // ---------------------------------------------------------------------------
-  setUserSeverity(userId, type, severity);
-
-  res.json({
-    ...summary,
-    message: 'Assessment submitted successfully'
-  });
 });
 
 // -----------------------------------------------------------------------------
 // GET /assessments/latest
 // Returns latest assessment summary for the user
 // -----------------------------------------------------------------------------
-router.get('/latest', (req, res) => {
-  const userId = req.user.userId;
-  const latest = getLatestAssessment(userId);
+router.get('/latest', async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const latest = await getLatestAssessment(userId);
 
-  if (!latest) {
-    return res.json({ exists: false });
+    if (!latest) {
+      return res.json({ exists: false });
+    }
+
+    res.json({
+      exists: true,
+      ...latest
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch latest assessment' });
   }
-
-  res.json({
-    exists: true,
-    ...latest
-  });
 });
 
 export default router;

@@ -49,7 +49,7 @@ router.post('/', async (req, res, next) => {
       trackCrisis(flags);
 
       // Store user message (but no assistant reply)
-      addMessage(userId, 'user', text);
+      await addMessage(userId, 'user', text);
 
       return res.status(200).json(
         getCrisisResponse(flags)
@@ -59,12 +59,12 @@ router.post('/', async (req, res, next) => {
     // -------------------------------------------------------------------------
     // 🧠 Fetch latest assessment context (severity memory)
     // -------------------------------------------------------------------------
-    const latestAssessment = getLatestAssessment(userId);
+    const latestAssessment = await getLatestAssessment(userId);
 
     // -------------------------------------------------------------------------
     // 🧠 Fetch short-term conversation context
     // -------------------------------------------------------------------------
-    const conversationContext = getConversationContext(userId);
+    const conversationContext = await getConversationContext(userId);
 
     // -------------------------------------------------------------------------
     // 🧩 Build AI prompt with assessment + conversation intelligence
@@ -87,8 +87,8 @@ router.post('/', async (req, res, next) => {
     // -------------------------------------------------------------------------
     // 🧠 Store conversation memory (privacy-safe)
     // -------------------------------------------------------------------------
-    addMessage(userId, 'user', text);
-    addMessage(userId, 'assistant', reply);
+    await addMessage(userId, 'user', text);
+    await addMessage(userId, 'assistant', reply);
 
     // -------------------------------------------------------------------------
     // 📊 Analytics (aggregate only)

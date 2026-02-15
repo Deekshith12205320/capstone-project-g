@@ -1,43 +1,68 @@
-// Short-term conversation memory (privacy-safe)
+// backend/src/services/conversationMemory.js
+import { Message } from '../models/Message.js';
 
-const memory = new Map();
+const MAX_CONTEXT_MESSAGES = 10; // Number of messages to feed into LLM context
 
-const MAX_MESSAGES = 6; // last 6 turns only
-const TTL = 30 * 60 * 1000; // 30 minutes
-
-export function addMessage(userId, role, content) {
-  const now = Date.now();
-  const convo = memory.get(userId) || [];
-
-  const updated = [
-    ...convo.filter(m => now - m.time < TTL),
-    { role, content, time: now }
-  ].slice(-MAX_MESSAGES);
-
-  memory.set(userId, updated);
+// Add a message to the database
+export async function addMessage(userId, role, content) {
+  try {
+    const newMessage = new Message({
+      userId,
+      role,
+      content,
+      isCrisis: 0 // Default, can be updated if crisis detected
+    });
+    await newMessage.save();
+  } catch (err) {
+    console.error('Error saving message to DB:', err);
+  }
 }
 
+// Get short-term context for the LLM (last N messages)
+export async function getConversationContext(userId) {
+  try {
+    const messages = await Message.find({ userId })
+      .sort({ timestamp: -1 })
+      .limit(MAX_CONTEXT_MESSAGES)
+      .lean();
 
-export function getConversationContext(userId) {
-  const convo = memory.get(userId);
-  if (!convo || convo.length === 0) return '';
-
-  return convo
-    .map(m => `${m.role}: ${m.content}`)
-    .join('\n');
+    // Reverse to chronological order for the LLM
+    return messages
+      .reverse()
+      .map(m => `${m.role}: ${m.content}`)
+      .join('\n');
+  } catch (err) {
+    console.error('Error fetching conversation context:', err);
+    return '';
+  }
 }
 
-export function getHistory(userId) {
-  const convo = memory.get(userId) || [];
-  return convo.map((m, index) => ({
-    id: index, // Simple index ID for now
-    role: m.role === 'assistant' ? 'ai' : 'user', // Map 'assistant' -> 'ai' for frontend
-    content: m.content,
-    timestamp: new Date(m.time).toISOString(),
-    is_crisis: 0
-  }));
+// Get full history for the Frontend UI (with pagination limit if needed)
+export async function getHistory(userId) {
+  try {
+    const messages = await Message.find({ userId })
+      .sort({ timestamp: 1 }) // Chronological order for UI
+      .limit(100) // Safety limit
+      .lean();
+
+    return messages.map(m => ({
+      id: m._id.toString(),
+      role: m.role === 'assistant' ? 'ai' : m.role, // Map 'assistant' -> 'ai'
+      content: m.content,
+      timestamp: m.timestamp.toISOString(),
+      is_crisis: m.isCrisis || 0
+    }));
+  } catch (err) {
+    console.error('Error fetching history:', err);
+    return [];
+  }
 }
 
-export function clearHistory(userId) {
-  memory.delete(userId);
+// Clear history for a user
+export async function clearHistory(userId) {
+  try {
+    await Message.deleteMany({ userId });
+  } catch (err) {
+    console.error('Error clearing history:', err);
+  }
 }

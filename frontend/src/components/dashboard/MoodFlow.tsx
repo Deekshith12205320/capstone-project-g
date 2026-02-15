@@ -21,13 +21,17 @@ export default function MoodFlow({ assessments = [] }: MoodFlowProps) {
         const sorted = [...assessments].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
         if (view === 'days') {
-            // Last 7 Entries (assuming 1 per day roughly, or just last 7 data points)
-            return sorted.slice(-7);
+            // Last 7 Entries
+            return sorted.slice(-7).map(a => ({
+                ...a,
+                label: new Date(a.timestamp).toLocaleDateString(undefined, { weekday: 'short' })
+            }));
         } else {
             // Mock "Weeks" logic: Take last 7 weeks (approx every 7th entry or just sample)
-            // For now, if we don't have enough data, we just show what we have but spaced out
-            // In real app, we would group by week.
-            return sorted.filter((_, i) => i % 5 === 0).slice(-7); // Mock weekly sampling
+            return sorted.filter((_, i) => i % 5 === 0).slice(-7).map(a => ({
+                ...a,
+                label: new Date(a.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+            }));
         }
     }, [assessments, view]);
 
@@ -125,15 +129,15 @@ export default function MoodFlow({ assessments = [] }: MoodFlowProps) {
                             <g key={i} className="group cursor-pointer">
                                 <circle cx={p.x} cy={p.y} r="5" className="fill-white stroke-green-600 stroke-2 hover:scale-125 transition-transform" />
                                 {/* Tooltip on hover */}
-                                <title>Score: {dataPoints[i]}</title>
+                                <title>{chartData[i].type}: {dataPoints[i]}</title>
                             </g>
                         ))}
                     </svg>
 
                     {/* X-Axis Labels */}
                     <div className="flex justify-between mt-[-20px] px-8 text-[10px] text-muted font-medium">
-                        {chartData.map((_, i) => (
-                            <span key={i} className="text-center w-4">{view === 'days' ? `D${i + 1}` : `W${i + 1}`}</span>
+                        {chartData.map((d, i) => (
+                            <span key={i} className="text-center w-8">{d.label}</span>
                         ))}
                     </div>
                 </div>
