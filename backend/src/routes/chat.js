@@ -98,11 +98,59 @@ router.post('/', async (req, res, next) => {
     // -------------------------------------------------------------------------
     // Response
     // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // 💡 Assessment Suggestion Logic (Keyword-based or AI-driven)
+    // -------------------------------------------------------------------------
+    let suggestion = null;
+    const lowerText = text.toLowerCase();
+
+    // -------------------------------------------------------------------------
+    // 💡 Assessment Suggestion Logic (Context-Aware)
+    // -------------------------------------------------------------------------
+    let suggestion = null;
+    const lowerText = text.toLowerCase();
+
+    // Helper to add suggestion if not already present
+    const addSuggestion = (msg, label, type) => {
+      if (!suggestion) {
+        suggestion = {
+          message: msg,
+          options: [{ label, type }]
+        };
+      } else {
+        // Add option if not exists
+        if (!suggestion.options.find(o => o.type === type)) {
+          suggestion.options.push({ label, type });
+        }
+      }
+    };
+
+    // Stress Context
+    if (lowerText.includes('stress') || lowerText.includes('overwhelmed') || lowerText.includes('pressure')) {
+      addSuggestion("It sounds like you're under a lot of pressure. Would it help to check your stress levels?", "Take Stress Check (PSS-10)", "pss10");
+    }
+
+    // Anxiety Context
+    if (lowerText.includes('anxiet') || lowerText.includes('worry') || lowerText.includes('panic') || lowerText.includes('nervous')) {
+      addSuggestion("I hear that you're feeling anxious. We can check the severity of that anxiety if you like.", "Check Anxiety (GAD-7)", "gad7");
+    }
+
+    // Burnout Context
+    if (lowerText.includes('burnout') || lowerText.includes('burned out') || lowerText.includes('exhausted') || lowerText.includes('tired')) {
+      addSuggestion("Feeling exhausted can be a sign of burnout. Want to see where you stand?", "Check Burnout", "burnout");
+    }
+
+    // Depression Context
+    if (lowerText.includes('depress') || lowerText.includes('sad') || lowerText.includes('hopeless') || lowerText.includes('down')) {
+      addSuggestion("I'm sorry you're feeling this way. It might be helpful to screen for depression symptoms.", "Depression Screen (PHQ-9)", "phq9");
+    }
+
     res.json({
       reply,
       crisis: false,
       flags,
-      assessmentContext: latestAssessment || null
+      assessmentContext: latestAssessment || null,
+      suggestion // ✅ Send contextual suggestion to frontend
     });
   } catch (err) {
     next(err);
