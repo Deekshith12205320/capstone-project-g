@@ -46,7 +46,7 @@ export default function Chat() {
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
-            content: "Hello, I'm Aura. How are you feeling today?",
+            content: "Hello, I'm Vista. How are you feeling today?",
             sender: 'ai',
             timestamp: new Date(),
         },
@@ -87,11 +87,11 @@ export default function Chat() {
         if (location.state?.initialMessage) {
             setInputValue(location.state.initialMessage);
             window.history.replaceState({}, document.title);
-        } else if (messages.length === 1 && messages[0].sender === 'ai' && messages[0].content.startsWith("Hello, I'm Aura")) {
+        } else if (messages.length === 1 && messages[0].sender === 'ai' && messages[0].content.startsWith("Hello, I'm Vista")) {
             // Only override default greeting if we haven't started chatting
             const moodContext = getMoodContext();
             if (moodContext) {
-                let contextMsg = "Hello, I'm Aura. ";
+                let contextMsg = "Hello, I'm Vista. ";
                 if (moodContext.includes("low") || moodContext.includes("gloomy")) {
                     contextMsg += "I noticed you're feeling a bit down. I'm here to listen.";
                 } else if (moodContext.includes("great")) {
@@ -151,7 +151,7 @@ export default function Chat() {
     const handleNewChat = () => {
         setMessages([{
             id: Date.now().toString(),
-            content: "Hello, I'm Aura. How are you feeling today?",
+            content: "Hello, I'm Vista. How are you feeling today?",
             sender: 'ai',
             timestamp: new Date(),
         }]);
@@ -314,7 +314,7 @@ export default function Chat() {
         <div className="h-[calc(100vh-4rem)] flex flex-col">
             <header className="mb-4 flex justify-between items-center text-left">
                 <div>
-                    <h1 className="text-3xl font-serif font-bold text-text">Chat with Aura</h1>
+                    <h1 className="text-3xl font-serif font-bold text-text">Chat with Vista</h1>
                     <p className="text-muted">Your personal space for reflection.</p>
                 </div>
 

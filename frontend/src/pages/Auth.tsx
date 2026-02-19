@@ -156,7 +156,7 @@ export default function Auth() {
                             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm border border-white/20">
                                 <Sprout size={20} className="text-white" />
                             </div>
-                            <span className="text-xl font-bold tracking-wide">Aura</span>
+                            <span className="text-xl font-bold tracking-wide">Vista</span>
                         </div>
 
                         <h2 className="text-4xl font-serif font-bold leading-tight mb-4">

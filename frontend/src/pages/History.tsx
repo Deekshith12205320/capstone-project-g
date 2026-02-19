@@ -219,7 +219,7 @@ export default function History() {
                                                         <div className="flex-1">
                                                             <div className="flex justify-between items-start mb-1">
                                                                 <span className="font-bold text-sm text-text">
-                                                                    {msg.role === 'ai' ? 'Aura' : 'You'}
+                                                                    {msg.role === 'ai' ? 'Vista' : 'You'}
                                                                 </span>
                                                                 <span className="text-xs text-muted font-mono">
                                                                     {format(new Date(msg.timestamp), 'h:mm a')}
@@ -311,7 +311,7 @@ export default function History() {
                                     className="bg-primary/90 hover:bg-primary text-white gap-2 pl-4 pr-6 rounded-xl"
                                 >
                                     <MessageSquare size={18} />
-                                    Discuss with Aura
+                                    Discuss with Vista
                                 </Button>
                                 <Button onClick={() => setSelectedAssessment(null)} variant="ghost" className="">
                                     Close

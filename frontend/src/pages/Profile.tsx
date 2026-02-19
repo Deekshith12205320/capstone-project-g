@@ -223,7 +223,7 @@ export default function Profile() {
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg text-text">About You</h3>
-                                <p className="text-sm text-muted">Help Aura understand your personality.</p>
+                                <p className="text-sm text-muted">Help Vista understand your personality.</p>
                             </div>
                         </div>
 
