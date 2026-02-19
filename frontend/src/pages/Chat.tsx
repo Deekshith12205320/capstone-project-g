@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Send, Bot, User, AlertTriangle, Activity } from 'lucide-react';
+import { Send, Bot, User, AlertTriangle, Activity, MessageSquarePlus } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { sendMessage, startAssessment, submitAssessment, fetchHistory, clearHistory, fetchAIStatus, type ChatResponse, type Question } from '../services/api';
+import { sendMessage, startAssessment, submitAssessment, clearHistory, fetchHistory, fetchAIStatus, type ChatResponse, type Question } from '../services/api';
 import { Trash2 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useAmbience } from '../context/AmbienceContext';
@@ -111,26 +111,28 @@ export default function Chat() {
     }, [location]);
 
     useEffect(() => {
-        const loadHistory = async () => {
-            const history = await fetchHistory();
-            if (history.length > 0) {
-                const formattedHistory: Message[] = history.map(h => ({
-                    id: h.id.toString(),
-                    content: h.content,
-                    sender: h.role === 'ai' ? 'ai' : 'user',
-                    timestamp: new Date(h.timestamp),
-                    isCrisis: !!h.is_crisis
-                }));
-                // Only set if we have history, otherwise keep default/context greeting
-                if (formattedHistory.length > 0) {
-                    setMessages(formattedHistory);
+        // Only load history if explicitly requested via navigation state (e.g. from History page)
+        if (location.state?.loadHistory) {
+            const loadHistory = async () => {
+                const history = await fetchHistory();
+                if (history.length > 0) {
+                    const formattedHistory: Message[] = history.map(h => ({
+                        id: h.id.toString(),
+                        content: h.content,
+                        sender: h.role === 'ai' ? 'ai' : 'user',
+                        timestamp: new Date(h.timestamp),
+                        isCrisis: !!h.is_crisis
+                    }));
+                    if (formattedHistory.length > 0) {
+                        setMessages(formattedHistory);
+                    }
                 }
-            }
-        };
-        // Only load history if we didn't just set a context message (or handle race condition better)
-        // For now, let's load history. If there is history, it overrides the greeting.
-        loadHistory();
-    }, []);
+            };
+            loadHistory();
+            // Clear state so refresh doesn't keep loading it if we don't want
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
 
     useEffect(() => {
         scrollToBottom();
@@ -145,6 +147,26 @@ export default function Chat() {
         const timer = setInterval(checkStatus, 30000); // Check every 30s
         return () => clearInterval(timer);
     }, []);
+
+    const handleNewChat = () => {
+        setMessages([{
+            id: Date.now().toString(),
+            content: "Hello, I'm Aura. How are you feeling today?",
+            sender: 'ai',
+            timestamp: new Date(),
+        }]);
+        setAssessment({
+            active: false,
+            type: '',
+            questions: [],
+            currentQuestionIndex: 0,
+            answers: {}
+        });
+        setInputValue('');
+        setIsLoading(false);
+        // Clear history loading state so navigation doesn't force re-load
+        window.history.replaceState({}, document.title);
+    };
 
     const handleClearHistory = async () => {
         try {
@@ -297,36 +319,49 @@ export default function Chat() {
                 </div>
 
                 {/* AI Provider Toggle */}
-                <div className="hidden sm:flex items-center bg-muted/50 p-1 rounded-lg border border-border/40">
-                    <button
-                        onClick={() => setActiveProvider('groq')}
-                        className={cn(
-                            "px-3 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-2",
-                            activeProvider === 'groq'
-                                ? "bg-white text-primary shadow-sm"
-                                : "text-muted hover:text-text"
-                        )}
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleNewChat}
+                        title="Start New Chat"
+                        className="text-primary border-primary/20 hover:bg-primary/5 flex gap-2 items-center"
                     >
-                        <div className={cn("w-1.5 h-1.5 rounded-full", aiStatus.groq ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]" : "bg-red-400")} />
-                        Groq
-                    </button>
-                    <button
-                        onClick={() => setActiveProvider('gemini')}
-                        className={cn(
-                            "px-3 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-2",
-                            activeProvider === 'gemini'
-                                ? "bg-white text-primary shadow-sm"
-                                : "text-muted hover:text-text"
-                        )}
-                    >
-                        <div className={cn("w-1.5 h-1.5 rounded-full", aiStatus.gemini ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]" : "bg-red-400")} />
-                        Gemini
-                    </button>
-                </div>
+                        <MessageSquarePlus size={18} />
+                        <span className="hidden sm:inline">New Chat</span>
+                    </Button>
 
-                <Button variant="ghost" size="sm" onClick={handleClearHistory} title="Clear History" className="text-muted hover:text-red-500">
-                    <Trash2 size={20} />
-                </Button>
+                    <div className="hidden sm:flex items-center bg-muted/50 p-1 rounded-lg border border-border/40">
+                        <button
+                            onClick={() => setActiveProvider('groq')}
+                            className={cn(
+                                "px-3 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-2",
+                                activeProvider === 'groq'
+                                    ? "bg-white text-primary shadow-sm"
+                                    : "text-muted hover:text-text"
+                            )}
+                        >
+                            <div className={cn("w-1.5 h-1.5 rounded-full", aiStatus.groq ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]" : "bg-red-400")} />
+                            Groq
+                        </button>
+                        <button
+                            onClick={() => setActiveProvider('gemini')}
+                            className={cn(
+                                "px-3 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-2",
+                                activeProvider === 'gemini'
+                                    ? "bg-white text-primary shadow-sm"
+                                    : "text-muted hover:text-text"
+                            )}
+                        >
+                            <div className={cn("w-1.5 h-1.5 rounded-full", aiStatus.gemini ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]" : "bg-red-400")} />
+                            Gemini
+                        </button>
+                    </div>
+
+                    <Button variant="ghost" size="sm" onClick={handleClearHistory} title="Clear History" className="text-muted hover:text-red-500">
+                        <Trash2 size={20} />
+                    </Button>
+                </div>
             </header>
 
             <Card className={cn("flex-1 flex flex-col overflow-hidden backdrop-blur-sm shadow-sm relative transition-colors duration-500", themeClass)}>

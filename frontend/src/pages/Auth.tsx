@@ -8,7 +8,7 @@ import { cn } from '../lib/utils';
 
 import { useAuth } from '../context/AuthContext';
 
-import { login as apiLogin, register as apiRegister } from '../services/api';
+import { login as apiLogin, register as apiRegister, loginWithGoogle, loginWithGitHub } from '../services/api';
 
 export default function Auth() {
     const [isLogin, setIsLogin] = useState(true);
@@ -22,7 +22,7 @@ export default function Auth() {
 
     const navigate = useNavigate();
     const { theme, setTheme } = useAmbience();
-    const { login, loginAsGuest } = useAuth();
+    const { login } = useAuth();
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -47,6 +47,76 @@ export default function Auth() {
             navigate('/dashboard');
         } catch (err: any) {
             setError(err.message || 'Authentication failed');
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        try {
+            // Check for client ID from environment
+            const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+            if (clientId && typeof (window as any).google !== 'undefined' && (window as any).google.accounts) {
+                // Initialize Google Sign-In
+                const google = (window as any).google;
+
+                google.accounts.id.initialize({
+                    client_id: clientId,
+                    callback: async (response: any) => {
+                        try {
+                            const data = await loginWithGoogle(response.credential);
+                            login(data.token, data.user);
+                            navigate('/dashboard');
+                        } catch (err: any) {
+                            setError(err.message || 'Google login failed');
+                        }
+                    }
+                });
+
+                // Prompt user to select account
+                google.accounts.id.prompt((notification: any) => {
+                    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                        // Fallback or error handling
+                        console.log("Google One Tap skipped/not displayed");
+                    }
+                });
+
+                return;
+            } else if (!clientId) {
+                console.warn("Missing VITE_GOOGLE_CLIENT_ID. Using simulation mode for demo.");
+            }
+
+            // For DEMO purposes: simulate a token exchange if no CLIENT_ID is present
+            // This ensures the button works for the user even without setup
+            if (!clientId) {
+                const mockIdToken = "mock_google_token_" + Date.now();
+                const data = await loginWithGoogle(mockIdToken);
+                login(data.token, data.user);
+                navigate('/dashboard');
+            }
+        } catch (err: any) {
+            setError(err.message || 'Google login failed');
+        }
+    };
+
+    const handleGithubLogin = async () => {
+        try {
+            const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+
+            if (clientId) {
+                // Real GitHub OAuth Redirect
+                window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=user:email`;
+                return;
+            } else {
+                console.warn("Missing VITE_GITHUB_CLIENT_ID. Using simulation mode for demo.");
+            }
+
+            // For DEMO purposes: simulate a code exchange if no CLIENT_ID
+            const mockCode = "mock_github_code_" + Date.now();
+            const data = await loginWithGitHub(mockCode);
+            login(data.token, data.user);
+            navigate('/dashboard');
+        } catch (err: any) {
+            setError(err.message || 'GitHub login failed');
         }
     };
 
@@ -222,23 +292,16 @@ export default function Auth() {
                         <div className="grid grid-cols-2 gap-4">
                             <Button
                                 type="button"
-                                onClick={() => {
-                                    loginAsGuest('Chrome Guest');
-                                    navigate('/dashboard');
-                                }}
+                                onClick={handleGoogleLogin}
                                 className="h-12 text-sm font-bold tracking-wide rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 shadow-sm transition-all flex items-center justify-center gap-2"
                             >
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Google_Chrome_icon_%28February_2022%29.svg" alt="Chrome" className="w-5 h-5" />
-                                Chrome Profile
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" className="w-5 h-5" />
+                                Google
                             </Button>
 
                             <Button
                                 type="button"
-                                onClick={() => {
-                                    // Mock GitHub login
-                                    loginAsGuest('GitHub User');
-                                    navigate('/dashboard');
-                                }}
+                                onClick={handleGithubLogin}
                                 className="h-12 text-sm font-bold tracking-wide rounded-xl bg-[#24292F] hover:bg-[#24292F]/90 text-white shadow-sm transition-all flex items-center justify-center gap-2"
                             >
                                 <svg height="20" viewBox="0 0 16 16" width="20" className="fill-current">

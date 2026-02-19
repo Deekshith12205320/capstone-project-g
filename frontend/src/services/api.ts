@@ -68,6 +68,33 @@ export async function register(name: string, email: string, password: string, ad
     return response.json();
 }
 
+
+export async function loginWithGoogle(idToken: string): Promise<any> {
+    const response = await fetch(`${API_URL}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken })
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Google login failed');
+    }
+    return response.json();
+}
+
+export async function loginWithGitHub(code: string): Promise<any> {
+    const response = await fetch(`${API_URL}/auth/github`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'GitHub login failed');
+    }
+    return response.json();
+}
+
 export async function sendMessage(text: string): Promise<ChatResponse> {
     try {
         const response = await fetch(`${API_URL}/chat`, {
@@ -384,7 +411,25 @@ export async function createJournalEntry(entry: Partial<JournalEntry>): Promise<
         const data = await response.json();
         return data.entry;
     } catch (error) {
-        console.error('Error saving journal entry:', error);
         return null;
+    }
+}
+
+export async function updateJournalEntry(id: string, entry: Partial<JournalEntry>): Promise<JournalEntry | null> {
+    try {
+        const response = await fetch(`${API_URL}/journal/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeader()
+            },
+            body: JSON.stringify(entry)
+        });
+        if (!response.ok) throw new Error('Failed to update journal entry');
+        const data = await response.json();
+        return data.entry;
+    } catch (error) {
+        console.error('Error updating journal entry:', error);
+        throw error;
     }
 }

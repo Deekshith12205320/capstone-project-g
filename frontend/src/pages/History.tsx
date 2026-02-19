@@ -195,7 +195,7 @@ export default function History() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => navigate('/chat')}
+                                                onClick={() => navigate('/chat', { state: { loadHistory: true } })}
                                                 className="text-primary hover:bg-primary/10 gap-1 text-xs font-bold bg-white/50"
                                             >
                                                 Continue Chat <ArrowUpRight size={14} />

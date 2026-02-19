@@ -43,4 +43,26 @@ export async function getJournalHistory(userId) {
         console.error('Error fetching journal history:', err);
         return [];
     }
+
+}
+
+/**
+ * Update a journal entry
+ */
+export async function updateJournalEntry(userId, entryId, updates) {
+    try {
+        const entry = await JournalEntry.findOne({ _id: entryId, userId });
+        if (!entry) return null;
+
+        if (updates.title) entry.title = updates.title;
+        if (updates.content) entry.content = updates.content;
+        if (updates.mood) entry.mood = updates.mood;
+        if (updates.tags) entry.tags = updates.tags;
+
+        await entry.save();
+        return entry;
+    } catch (err) {
+        console.error('Error updating journal entry:', err);
+        throw err;
+    }
 }

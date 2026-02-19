@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Music, Play, Pause, SkipForward, Heart } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 
 // Mock data for now
@@ -49,12 +50,18 @@ export default function MusicPlayer() {
     const currentTrack = MOCK_TRACKS[currentTrackIndex];
 
     return (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-2 p-2 rounded-full bg-white/80 backdrop-blur-md shadow-lg border border-white/50 transition-all duration-300 hover:scale-105 group">
+        <motion.div
+            drag
+            dragMomentum={false}
+            whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
+            initial={{ bottom: '1.5rem', right: '1.5rem' }}
+            className="fixed z-50 flex items-center gap-2 p-2 rounded-full bg-white/80 backdrop-blur-md shadow-lg border border-white/50 transition-colors duration-300 hover:bg-white/90 group cursor-grab"
+        >
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                 <Music size={14} className={cn(isPlaying && "animate-pulse")} />
             </div>
 
-            <div className="flex flex-col w-0 group-hover:w-24 overflow-hidden transition-all duration-300 group-hover:px-2">
+            <div className="flex flex-col w-0 group-hover:w-24 overflow-hidden transition-all duration-300 group-hover:px-2 select-none">
                 <span className="text-xs font-bold text-gray-700 whitespace-nowrap truncate">
                     {currentTrack.title}
                 </span>
@@ -89,6 +96,9 @@ export default function MusicPlayer() {
             >
                 <Heart size={14} fill={isSaved ? "currentColor" : "none"} />
             </button>
-        </div>
+
+            {/* Drag Handle Indicator (optional visual cue) */}
+            <div className="w-1 h-4 bg-gray-300 rounded-full mx-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </motion.div>
     );
 }

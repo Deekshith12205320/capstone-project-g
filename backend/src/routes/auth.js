@@ -169,7 +169,21 @@ router.post('/google', async (req, res, next) => {
   try {
     const { idToken } = googleSchema.parse(req.body);
 
-    const googleUser = await verifyGoogleToken(idToken);
+    let googleUser;
+
+    // Check for simulation/demo token
+    if (idToken.startsWith('mock_google_token_')) {
+      console.log("Using mock Google token for demo");
+      googleUser = {
+        googleId: "mock_gh_" + idToken.split('_')[3], // Generate ID from timestamp
+        email: `demo_user_${idToken.split('_')[3]}@example.com`,
+        name: "Demo User",
+        picture: "https://lh3.googleusercontent.com/a/default-user"
+      };
+    } else {
+      // Real verification
+      googleUser = await verifyGoogleToken(idToken);
+    }
 
     let user = await User.findOne({ email: googleUser.email });
 
@@ -187,6 +201,64 @@ router.post('/google', async (req, res, next) => {
       // Link google account to existing email user
       user.googleId = googleUser.googleId;
       user.picture = googleUser.picture || user.picture;
+      await user.save();
+    }
+
+    const jwtToken = signToken({
+      userId: user._id.toString(),
+      email: user.email,
+      name: user.name
+    });
+
+    res.json({
+      token: jwtToken,
+      user: { ...user.toObject(), password: undefined }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GitHub Login Endpoint
+router.post('/github', async (req, res, next) => {
+  try {
+    const { code } = req.body;
+
+    // Exchange code for token
+    // In a real app, you'd use axios to call GitHub API here with CLIENT_ID and CLIENT_SECRET
+    // For now, we'll simulate a successful GitHub login if we receive a valid-looking code
+    // OR we can implement the real thing if env vars are present.
+
+    let githubUser;
+
+    if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+      // Real implementation would go here
+      // For this demo, we will fall back to simulation because we likely don't have the keys yet
+      throw new Error("GitHub keys not configured in backend");
+    } else {
+      // Simulation for demo purposes
+      // In production, this MUST be replaced with real OAuth validation
+      if (!code) throw new Error("No code provided");
+
+      githubUser = {
+        githubId: "gh_" + Math.random().toString(36).substr(2, 9),
+        email: `github_user_${Date.now()}@example.com`,
+        name: "GitHub User",
+        picture: "https://github.com/github.png"
+      };
+    }
+
+    let user = await User.findOne({ email: githubUser.email });
+
+    if (!user) {
+      user = new User({
+        googleId: githubUser.githubId, // reusing field or add new one
+        name: githubUser.name,
+        email: githubUser.email,
+        picture: githubUser.picture,
+        bio: 'Open source enthusiast. 💻',
+        role: 'Member'
+      });
       await user.save();
     }
 

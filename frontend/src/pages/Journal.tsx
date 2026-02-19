@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchJournalEntries, createJournalEntry } from '../services/api';
+import { fetchJournalEntries, createJournalEntry, updateJournalEntry } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -14,6 +14,7 @@ export default function Journal() {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [entries, setEntries] = useState<any[]>([]);
+    const [selectedEntry, setSelectedEntry] = useState<any>(null);
 
     // Load entries on mount
     useEffect(() => {
@@ -30,6 +31,23 @@ export default function Journal() {
 
     const saveEntry = async () => {
         if (!content.trim()) return;
+
+        if (selectedEntry) {
+            const updated = await updateJournalEntry(selectedEntry.id, {
+                title,
+                content,
+                mood: selectedEntry.mood,
+                tags: selectedEntry.tags
+            });
+
+            if (updated) {
+                setEntries(entries.map(e => e.id === updated.id ? updated : e));
+                alert("Entry updated successfully!");
+            } else {
+                alert("Failed to update entry.");
+            }
+            return;
+        }
 
         const newEntry = {
             title: title || 'Untitled Reflection',
@@ -50,10 +68,64 @@ export default function Journal() {
         }
     };
 
+    const handleSelectEntry = (entry: any) => {
+        setSelectedEntry(entry);
+        setTitle(entry.title);
+        setContent(entry.content);
+    };
+
+    const handleNewEntry = () => {
+        setSelectedEntry(null);
+        setTitle('');
+        setContent('');
+    };
+
     // Calculate stats
+    const calculateStreak = () => {
+        if (entries.length === 0) return 0;
+
+        // Sort entries by date descending (should already be sorted but to be safe)
+        const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        let streak = 0;
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        // Check if latest entry is today or yesterday
+        const latestDate = new Date(sorted[0].date);
+        const latestDay = new Date(latestDate.getFullYear(), latestDate.getMonth(), latestDate.getDate());
+
+        const diffTime = Math.abs(today.getTime() - latestDay.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays > 1) return 0; // Streak broken if skipped a day
+
+        streak = 1;
+        let currentDate = latestDay;
+
+        for (let i = 1; i < sorted.length; i++) {
+            const entryDate = new Date(sorted[i].date);
+            const entryDay = new Date(entryDate.getFullYear(), entryDate.getMonth(), entryDate.getDate());
+
+            const gap = Math.abs(currentDate.getTime() - entryDay.getTime());
+            const gapDays = Math.ceil(gap / (1000 * 60 * 60 * 24));
+
+            if (gapDays === 1) {
+                streak++;
+                currentDate = entryDay;
+            } else if (gapDays === 0) {
+                // Same day, continue
+                continue;
+            } else {
+                break;
+            }
+        }
+        return streak;
+    };
+
     const stats = {
         entries: entries.length,
-        streak: entries.length > 0 ? 1 : 0 // Simplified streak logic
+        streak: calculateStreak()
     };
 
     return (
@@ -169,8 +241,37 @@ export default function Journal() {
                             <h3 className="font-bold text-emerald-900">Past Letters</h3>
                         </div>
 
-                        <div className="flex flex-col items-center justify-center h-32 text-center">
-                            <p className="text-emerald-800/40 italic text-sm">No entries yet. Start writing <span className="inline-block -rotate-12">🌱</span></p>
+                        <div className="flex flex-col items-center justify-center min-h-[100px] text-center space-y-3">
+                            {entries.length === 0 ? (
+                                <p className="text-emerald-800/40 italic text-sm">No entries yet. Start writing <span className="inline-block -rotate-12">🌱</span></p>
+                            ) : (
+                                <div className="w-full space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                                    {entries.map(entry => (
+                                        <button
+                                            key={entry.id}
+                                            onClick={() => handleSelectEntry(entry)}
+                                            className={cn(
+                                                "w-full text-left p-3 rounded-xl transition-all border",
+                                                selectedEntry?.id === entry.id
+                                                    ? "bg-emerald-100 border-emerald-300 shadow-sm"
+                                                    : "bg-white border-emerald-50 hover:bg-emerald-50 hover:translate-x-1"
+                                            )}
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <span className="font-bold text-emerald-900 text-sm truncate w-[70%]">{entry.title || 'Untitled'}</span>
+                                                <span className="text-[10px] text-emerald-600 font-mono">{format(new Date(entry.date), 'MMM d')}</span>
+                                            </div>
+                                            <p className="text-xs text-emerald-800/60 truncate mt-1">{entry.content}</p>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {selectedEntry && (
+                                <Button size="sm" variant="ghost" className="w-full mt-2 text-xs" onClick={handleNewEntry}>
+                                    + New Entry
+                                </Button>
+                            )}
                         </div>
                     </Card>
                 </div>
