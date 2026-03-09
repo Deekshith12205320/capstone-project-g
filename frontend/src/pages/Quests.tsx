@@ -1,83 +1,66 @@
 import { useState } from 'react';
-import { Gamepad2, Grid3X3, Layers, Box, Sparkles } from 'lucide-react';
-import BubbleWrap from '../components/games/BubbleWrap';
-import GratitudeBingo from '../components/games/GratitudeBingo';
+import { Grid3X3, Layers, Box, Sparkles } from 'lucide-react';
+import CandyBubble from '../components/games/CandyBubble';
+import ForestMania from '../components/games/ForestMania';
+import AntiStress from '../components/games/AntiStress';
+import TopBurger from '../components/games/TopBurger';
+import { useRewards } from '../hooks/useRewards';
+import { Card } from '../components/ui/Card';
+import { X, Award, Flame } from 'lucide-react';
 
 export default function Quests() {
     const [activeGame, setActiveGame] = useState<string | null>(null);
+    const [showBadges, setShowBadges] = useState(false);
+    const { stats, badges, completeQuest } = useRewards();
 
     const quests = [
         {
-            id: 'bubble-wrap',
-            label: 'Bubble Wrap',
-            icon: <Layers size={32} className="text-orange-500" />,
-            desc: 'Pop stress away instantly',
-            longDesc: 'A simple, tactile way to relieve anxiety. Pop bubbles endlessly with satisfying sounds.',
-            color: 'bg-orange-50 hover:bg-orange-100',
-            borderColor: 'border-orange-100',
-            barColor: 'bg-orange-500',
-            progress: 30,
-            onClick: () => setActiveGame('bubble-wrap')
-        },
-        {
-            id: 'bingo',
-            label: 'Gratitude Bingo',
-            icon: <Grid3X3 size={32} className="text-rose-500" />,
-            desc: 'Find the positives in your day',
-            longDesc: 'Train your brain to scan for the good things. Complete a row to win!',
-            color: 'bg-rose-50 hover:bg-rose-100',
-            borderColor: 'border-rose-100',
-            barColor: 'bg-rose-500',
-            progress: 60,
-            onClick: () => setActiveGame('bingo')
-        },
-        {
-            id: 'tetris',
-            label: 'Tetris Flow',
-            icon: <Box size={32} className="text-blue-500" />,
-            desc: 'Organize your thoughts',
-            longDesc: 'Find flow and focus by fitting pieces together. Coming soon.',
-            color: 'bg-blue-50 hover:bg-blue-100',
-            borderColor: 'border-blue-100',
-            barColor: 'bg-blue-500',
-            progress: 10,
-            onClick: () => { }
-        },
-        {
-            id: '2048',
-            label: 'Mindful 2048',
-            icon: <Gamepad2 size={32} className="text-purple-500" />,
-            desc: 'Focus & merge numbers',
-            longDesc: 'A relaxing number puzzle to sharpen your mind. Coming soon.',
-            color: 'bg-purple-50 hover:bg-purple-100',
-            borderColor: 'border-purple-100',
-            barColor: 'bg-purple-500',
+            id: 'candy-bubble',
+            label: 'Candy Bubble',
+            icon: <Layers size={32} className="text-pink-500" />,
+            desc: 'Infinite bubbles and fun',
+            longDesc: 'A never-ending adventure with infinite bubbles and fun.',
+            color: 'bg-pink-50 hover:bg-pink-100',
+            borderColor: 'border-pink-100',
+            barColor: 'bg-pink-500',
             progress: 0,
-            onClick: () => { }
+            onClick: () => setActiveGame('candy-bubble')
         },
         {
-            id: 'journaling',
-            label: 'Expressive Writing',
-            icon: <Layers size={32} className="text-indigo-500" />,
-            desc: 'Unload your mind',
-            longDesc: 'Write freely for 5 minutes. No judgment, just flow.',
-            color: 'bg-indigo-50 hover:bg-indigo-100',
-            borderColor: 'border-indigo-100',
-            barColor: 'bg-indigo-500',
+            id: 'forest-mania',
+            label: 'Forest Mania',
+            icon: <Grid3X3 size={32} className="text-emerald-500" />,
+            desc: 'Match 3 animals',
+            longDesc: 'The latest and newest in ACCUMULATIVE "Match 3" puzzles!',
+            color: 'bg-emerald-50 hover:bg-emerald-100',
+            borderColor: 'border-emerald-100',
+            barColor: 'bg-emerald-500',
             progress: 0,
-            onClick: () => { }
+            onClick: () => setActiveGame('forest-mania')
         },
         {
-            id: 'breathing',
-            label: 'Box Breathing',
+            id: 'anti-stress',
+            label: 'Anti Stress Game',
             icon: <Sparkles size={32} className="text-teal-500" />,
-            desc: 'Regulate your nervous system',
-            longDesc: 'Inhale, hold, exhale, hold. 4 seconds each.',
+            desc: 'Relaxation and diversion',
+            longDesc: 'When you need relaxation, diversion or just a moment of distraction.',
             color: 'bg-teal-50 hover:bg-teal-100',
             borderColor: 'border-teal-100',
             barColor: 'bg-teal-500',
             progress: 0,
-            onClick: () => { }
+            onClick: () => setActiveGame('anti-stress')
+        },
+        {
+            id: 'top-burger',
+            label: 'Top Burger',
+            icon: <Box size={32} className="text-orange-500" />,
+            desc: 'Fast food simulation',
+            longDesc: 'You just opened a burger restaurant, let\'s see if you can put together burgers fast enough!',
+            color: 'bg-orange-50 hover:bg-orange-100',
+            borderColor: 'border-orange-100',
+            barColor: 'bg-orange-500',
+            progress: 0,
+            onClick: () => setActiveGame('top-burger')
         }
     ];
 
@@ -124,19 +107,7 @@ export default function Quests() {
                             </p>
                         </div>
 
-                        {/* Progress Bar */}
-                        <div className="mt-4">
-                            <div className="flex justify-between text-xs font-bold text-muted mb-1.5 opacity-80">
-                                <span>Progress</span>
-                                <span>{quest.progress}%</span>
-                            </div>
-                            <div className="w-full bg-black/5 h-2.5 rounded-full overflow-hidden">
-                                <div
-                                    className={`h-full rounded-full ${quest.barColor} transition-all duration-1000`}
-                                    style={{ width: `${quest.progress}%` }}
-                                />
-                            </div>
-                        </div>
+                        {/* Progress Bar Removed - Just showing Level badge at the top */}
                     </button>
                 ))}
             </div>
@@ -147,21 +118,29 @@ export default function Quests() {
                     <div>
                         <div className="flex items-center gap-2 mb-2 text-indigo-100 font-bold tracking-wide uppercase text-xs">
                             <Sparkles size={16} />
-                            Daily Challenge
+                            Your Progress
                         </div>
-                        <h2 className="text-3xl font-serif font-bold mb-2">Complete 3 Quests Today</h2>
-                        <p className="text-indigo-100 max-w-md">
-                            Consistency is key to mental fitness. Complete 3 quick exercises to maintain your streak and earn a badge.
-                        </p>
+                        <h2 className="text-3xl font-serif font-bold mb-2">Level {stats.level}</h2>
+                        <div className="flex items-center gap-4 mt-4">
+                            <div className="bg-black/20 w-48 h-2 rounded-full overflow-hidden">
+                                <div className="bg-indigo-300 h-full" style={{ width: `${(stats.xp % 100)}%` }} />
+                            </div>
+                            <span className="text-sm font-bold opacity-80">{stats.xp} / {stats.level * 100} XP</span>
+                        </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="text-center">
-                            <div className="text-4xl font-bold">1</div>
-                            <div className="text-xs text-indigo-200 uppercase font-bold">Streak</div>
+                        <div className="text-center group cursor-pointer" onClick={() => setShowBadges(true)}>
+                            <div className="text-4xl font-bold text-yellow-300 flex justify-center items-center drop-shadow-md group-hover:scale-110 transition-transform">
+                                {stats.currentStreak} <Flame size={28} className="ml-1" />
+                            </div>
+                            <div className="text-xs text-indigo-200 uppercase font-bold tracking-widest mt-1">Day Streak</div>
                         </div>
-                        <div className="h-12 w-px bg-indigo-400/50"></div>
-                        <button className="bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg">
-                            Claim Reward
+                        <div className="h-12 w-px bg-indigo-400/50 mx-2"></div>
+                        <button
+                            onClick={() => setShowBadges(true)}
+                            className="bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg flex items-center gap-2"
+                        >
+                            <Award size={18} /> View Badges
                         </button>
                     </div>
                 </div>
@@ -171,14 +150,63 @@ export default function Quests() {
                 <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-black/10 rounded-full blur-3xl pointer-events-none"></div>
             </div>
 
+            {/* Badges Modal */}
+            {showBadges && (
+                <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+                    <Card className="max-w-xl w-full p-6 max-h-[80vh] overflow-y-auto relative animate-in zoom-in-95">
+                        <button onClick={() => setShowBadges(false)} className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
+                            <X size={20} />
+                        </button>
+                        <div className="mb-6">
+                            <h2 className="text-3xl font-serif font-bold text-gray-900 mb-2">Your Trophies</h2>
+                            <p className="text-gray-500">Collect badges by maintaining streaks and mastering quests.</p>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {badges.map(badge => (
+                                <div key={badge.id} className={`p-4 rounded-xl border text-center transition-all ${badge.unlockedAt ? 'bg-indigo-50/50 border-indigo-200 hover:shadow-md' : 'bg-gray-50 border-gray-100 opacity-60 grayscale'}`}>
+                                    <div className="text-4xl mb-3 drop-shadow-sm">{badge.icon}</div>
+                                    <h3 className="font-bold text-gray-900 text-sm mb-1">{badge.title}</h3>
+                                    <p className="text-[10px] text-gray-500 leading-tight">{badge.description}</p>
+                                    {badge.unlockedAt && (
+                                        <div className="mt-3 text-[9px] font-bold text-indigo-600 tracking-widest uppercase">
+                                            Unlocked {new Date(badge.unlockedAt).toLocaleDateString()}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
+            )}
+
             {/* Game Modals */}
-            <BubbleWrap
-                isOpen={activeGame === 'bubble-wrap'}
-                onClose={() => setActiveGame(null)}
+            <CandyBubble
+                isOpen={activeGame === 'candy-bubble'}
+                onClose={() => {
+                    completeQuest('candy-bubble');
+                    setActiveGame(null);
+                }}
             />
-            <GratitudeBingo
-                isOpen={activeGame === 'bingo'}
-                onClose={() => setActiveGame(null)}
+            <ForestMania
+                isOpen={activeGame === 'forest-mania'}
+                onClose={() => {
+                    completeQuest('forest-mania');
+                    setActiveGame(null);
+                }}
+            />
+            <AntiStress
+                isOpen={activeGame === 'anti-stress'}
+                onClose={() => {
+                    completeQuest('anti-stress');
+                    setActiveGame(null);
+                }}
+            />
+            <TopBurger
+                isOpen={activeGame === 'top-burger'}
+                onClose={() => {
+                    completeQuest('top-burger');
+                    setActiveGame(null);
+                }}
             />
         </div>
     );

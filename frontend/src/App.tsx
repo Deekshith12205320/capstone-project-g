@@ -9,11 +9,12 @@ import Journal from './pages/Journal';
 import Quests from './pages/Quests';
 import Landing from './pages/Landing';
 import RegisterWizard from './pages/RegisterWizard';
-import SpotifyCallback from './pages/SpotifyCallback';
+
 import Games from './pages/Games';
 import SupportNetwork from './pages/SupportNetwork';
 import MusicLibrary from './pages/MusicLibrary';
 import DailyAssessment from './pages/DailyAssessment';
+import Yoga from './pages/Yoga';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useEffect } from 'react';
 
@@ -25,7 +26,7 @@ function AppRoutes() {
       <Route path="/" element={<Landing />} />
       <Route path="/auth" element={!isAuthenticated ? <Auth /> : <Navigate to="/dashboard" />} />
       <Route path="/register" element={!isAuthenticated ? <RegisterWizard /> : <Navigate to="/dashboard" />} />
-      <Route path="/spotify_callback" element={<SpotifyCallback />} />
+
 
       {isAuthenticated ? (
         <Route element={<Layout />}>
@@ -41,6 +42,7 @@ function AppRoutes() {
           <Route path="/assessment/daily" element={<DailyAssessment />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/yoga" element={<Yoga />} />
         </Route>
       ) : (
         <Route path="*" element={<Navigate to="/auth" replace />} />

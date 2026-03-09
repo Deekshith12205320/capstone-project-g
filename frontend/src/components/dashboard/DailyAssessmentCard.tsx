@@ -6,13 +6,17 @@ import { Activity, Calendar, Trophy, ArrowRight } from 'lucide-react';
 interface DailyAssessmentCardProps {
     daysActive: number;
     avgMood: number;
+    hasCompletedToday?: boolean;
     onStartAssessment: () => void;
 }
 
-export function DailyAssessmentCard({ daysActive, avgMood, onStartAssessment }: DailyAssessmentCardProps) {
+export function DailyAssessmentCard({ daysActive, avgMood, hasCompletedToday, onStartAssessment }: DailyAssessmentCardProps) {
 
     return (
-        <Card className="p-6 relative overflow-hidden group hover:shadow-md transition-all cursor-pointer border-l-4 border-l-primary" onClick={onStartAssessment}>
+        <Card
+            className={`p-6 relative overflow-hidden group transition-all border-l-4 border-l-primary ${hasCompletedToday ? 'opacity-80 cursor-default' : 'hover:shadow-md cursor-pointer'}`}
+            onClick={hasCompletedToday ? undefined : onStartAssessment}
+        >
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <Activity size={80} className="text-primary" />
             </div>
@@ -46,7 +50,11 @@ export function DailyAssessmentCard({ daysActive, avgMood, onStartAssessment }: 
             </div>
 
             <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center text-xs text-muted">
-                <span>Click to start assessment</span>
+                {hasCompletedToday ? (
+                    <span className="text-primary font-bold">✓ Completed today</span>
+                ) : (
+                    <span>Click to start assessment</span>
+                )}
             </div>
         </Card>
     );

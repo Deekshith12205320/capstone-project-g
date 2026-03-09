@@ -150,33 +150,33 @@ export default function Journal() {
                 <div className="lg:col-span-2">
                     <div className="text-center mb-8">
                         <div className="flex items-center justify-center gap-2 mb-2">
-                            <Sprout size={32} className="text-primary" />
+                            <Sprout size={32} className={theme === 'green' ? 'text-emerald-600' : theme === 'lavender' ? 'text-purple-600' : 'text-rose-600'} />
                         </div>
-                        <h1 className="text-4xl font-serif font-bold text-emerald-800 mb-2">Inner Space</h1>
-                        <p className="text-emerald-600/80 font-medium">A safe, gentle space to express your thoughts.</p>
+                        <h1 className={cn("text-4xl font-serif font-bold mb-2", theme === 'green' ? 'text-emerald-800' : theme === 'lavender' ? 'text-purple-800' : 'text-rose-800')}>Inner Space</h1>
+                        <p className={cn("font-medium", theme === 'green' ? 'text-emerald-600/80' : theme === 'lavender' ? 'text-purple-600/80' : 'text-rose-600/80')}>A safe, gentle space to express your thoughts.</p>
                     </div>
 
                     <div className="bg-white/40 backdrop-blur-sm rounded-[2rem] p-1 shadow-xl border border-white/50 relative">
                         {/* Date Badge */}
-                        <div className="absolute -top-4 left-8 bg-emerald-800/10 backdrop-blur-md px-4 py-1.5 rounded-xl border border-emerald-800/10 shadow-sm flex items-center gap-2">
-                            <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+                        <div className={cn("absolute -top-4 left-8 backdrop-blur-md px-4 py-1.5 rounded-xl border shadow-sm flex items-center gap-2", theme === 'green' ? 'bg-emerald-800/10 border-emerald-800/10' : theme === 'lavender' ? 'bg-purple-800/10 border-purple-800/10' : 'bg-rose-800/10 border-rose-800/10')}>
+                            <span className={cn("text-xs font-bold uppercase tracking-wider", theme === 'green' ? 'text-emerald-800' : theme === 'lavender' ? 'text-purple-800' : 'text-rose-800')}>
                                 {format(new Date(), 'EEE MMM dd yyyy')}
                             </span>
                         </div>
 
                         {/* Paper Effect Container */}
-                        <div className="bg-[#fdfbf7] rounded-[1.8rem] p-8 md:p-12 min-h-[600px] shadow-inner relative overflow-hidden group">
+                        <div className={cn("rounded-[1.8rem] p-8 md:p-12 min-h-[600px] shadow-inner relative overflow-hidden group", theme === 'green' ? 'bg-[#fdfdf9]' : theme === 'lavender' ? 'bg-[#fafafa]' : 'bg-[#fffafc]')}>
 
                             {/* Paper Header */}
                             <div className="mb-8">
-                                <h2 className="font-serif italic text-2xl text-emerald-800/80 flex items-center gap-2 mb-6">
-                                    Dear Self <Leaf size={16} className="text-emerald-600" />
+                                <h2 className={cn("font-serif italic text-2xl flex items-center gap-2 mb-6", theme === 'green' ? 'text-emerald-800/80' : theme === 'lavender' ? 'text-purple-800/80' : 'text-rose-800/80')}>
+                                    Dear Self <Leaf size={16} className={theme === 'green' ? 'text-emerald-600' : theme === 'lavender' ? 'text-purple-600' : 'text-rose-600'} />
                                 </h2>
 
                                 <input
                                     type="text"
                                     placeholder="Letter Title (optional)"
-                                    className="w-full bg-transparent border-b-2 border-emerald-100 text-2xl font-serif text-emerald-900 placeholder:text-emerald-800/30 focus:outline-none focus:border-emerald-300 transition-colors py-2"
+                                    className={cn("w-full bg-transparent border-b-2 text-2xl font-serif focus:outline-none transition-colors py-2", theme === 'green' ? 'border-emerald-100 text-emerald-900 placeholder:text-emerald-800/30 focus:border-emerald-300' : theme === 'lavender' ? 'border-purple-100 text-purple-900 placeholder:text-purple-800/30 focus:border-purple-300' : 'border-rose-100 text-rose-900 placeholder:text-rose-800/30 focus:border-rose-300')}
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                 />
@@ -184,9 +184,9 @@ export default function Journal() {
 
                             {/* Lined Text Area */}
                             <textarea
-                                className="w-full h-[400px] bg-transparent resize-none focus:outline-none text-emerald-900/90 text-lg leading-[3rem] font-medium placeholder:text-emerald-800/20"
+                                className={cn("w-full h-[400px] bg-transparent resize-none focus:outline-none text-lg leading-[3rem] font-medium", theme === 'green' ? 'text-emerald-900/90 placeholder:text-emerald-800/20' : theme === 'lavender' ? 'text-purple-900/90 placeholder:text-purple-800/20' : 'text-rose-900/90 placeholder:text-rose-800/20')}
                                 style={{
-                                    backgroundImage: 'linear-gradient(transparent 95%, #e5e7eb 95%)',
+                                    backgroundImage: theme === 'green' ? 'linear-gradient(transparent 95%, #ecfdf5 95%)' : theme === 'lavender' ? 'linear-gradient(transparent 95%, #f5f3ff 95%)' : 'linear-gradient(transparent 95%, #fff1f2 95%)',
                                     backgroundSize: '100% 3rem',
                                     lineHeight: '3rem'
                                 }}
@@ -197,14 +197,14 @@ export default function Journal() {
 
                             {/* Footer / Sign-off */}
                             <div className="mt-8 flex items-end justify-between">
-                                <div className="text-emerald-800/60 font-serif italic">
+                                <div className={cn("font-serif italic", theme === 'green' ? 'text-emerald-800/60' : theme === 'lavender' ? 'text-purple-800/60' : 'text-rose-800/60')}>
                                     With love and kindness,<br />
                                     ~ {user?.name || "Me"} <span className="inline-block animate-pulse">🌿</span>
                                 </div>
 
                                 <Button
                                     onClick={saveEntry}
-                                    className="bg-emerald-700 hover:bg-emerald-800 text-white rounded-full px-6 shadow-lg shadow-emerald-700/20 transition-all hover:scale-105"
+                                    className={cn("text-white rounded-full px-6 shadow-lg transition-all hover:scale-105", theme === 'green' ? 'bg-emerald-700 hover:bg-emerald-800 shadow-emerald-700/20' : theme === 'lavender' ? 'bg-purple-700 hover:bg-purple-800 shadow-purple-700/20' : 'bg-rose-700 hover:bg-rose-800 shadow-rose-700/20')}
                                 >
                                     Save Entry <Send size={16} className="ml-2" />
                                 </Button>
@@ -216,34 +216,34 @@ export default function Journal() {
                 {/* Side Panel */}
                 <div className="space-y-6 lg:pt-32">
                     {/* Stats Card */}
-                    <Card className="bg-[#fcfdfa] border-emerald-100/50 p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <Card className={cn("bg-[#fcfdfa] p-6 shadow-sm hover:shadow-md transition-shadow", theme === 'green' ? 'border-emerald-100/50' : theme === 'lavender' ? 'border-purple-100/50' : 'border-rose-100/50')}>
                         <div className="flex items-center gap-2 mb-6">
-                            <BookHeart size={20} className="text-emerald-700" />
-                            <h3 className="font-bold text-emerald-900">Your Journey</h3>
+                            <BookHeart size={20} className={theme === 'green' ? 'text-emerald-700' : theme === 'lavender' ? 'text-purple-700' : 'text-rose-700'} />
+                            <h3 className={cn("font-bold", theme === 'green' ? 'text-emerald-900' : theme === 'lavender' ? 'text-purple-900' : 'text-rose-900')}>Your Journey</h3>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4 text-center">
                             <div>
-                                <div className="text-3xl font-serif font-bold text-emerald-800">{stats.entries}</div>
-                                <div className="text-xs font-bold text-emerald-600/60 uppercase tracking-widest mt-1">Entries</div>
+                                <div className={cn("text-3xl font-serif font-bold", theme === 'green' ? 'text-emerald-800' : theme === 'lavender' ? 'text-purple-800' : 'text-rose-800')}>{stats.entries}</div>
+                                <div className={cn("text-xs font-bold uppercase tracking-widest mt-1", theme === 'green' ? 'text-emerald-600/60' : theme === 'lavender' ? 'text-purple-600/60' : 'text-rose-600/60')}>Entries</div>
                             </div>
                             <div>
-                                <div className="text-3xl font-serif font-bold text-emerald-800">{stats.streak}</div>
-                                <div className="text-xs font-bold text-emerald-600/60 uppercase tracking-widest mt-1">Day Streak</div>
+                                <div className={cn("text-3xl font-serif font-bold", theme === 'green' ? 'text-emerald-800' : theme === 'lavender' ? 'text-purple-800' : 'text-rose-800')}>{stats.streak}</div>
+                                <div className={cn("text-xs font-bold uppercase tracking-widest mt-1", theme === 'green' ? 'text-emerald-600/60' : theme === 'lavender' ? 'text-purple-600/60' : 'text-rose-600/60')}>Day Streak</div>
                             </div>
                         </div>
                     </Card>
 
                     {/* History Card */}
-                    <Card className="bg-[#fcfdfa] border-emerald-100/50 p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px]">
+                    <Card className={cn("bg-[#fcfdfa] p-6 shadow-sm hover:shadow-md transition-shadow min-h-[200px]", theme === 'green' ? 'border-emerald-100/50' : theme === 'lavender' ? 'border-purple-100/50' : 'border-rose-100/50')}>
                         <div className="flex items-center gap-2 mb-4">
-                            <HistoryIcon className="text-emerald-700" size={20} />
-                            <h3 className="font-bold text-emerald-900">Past Letters</h3>
+                            <HistoryIcon className={theme === 'green' ? 'text-emerald-700' : theme === 'lavender' ? 'text-purple-700' : 'text-rose-700'} size={20} />
+                            <h3 className={cn("font-bold", theme === 'green' ? 'text-emerald-900' : theme === 'lavender' ? 'text-purple-900' : 'text-rose-900')}>Past Letters</h3>
                         </div>
 
                         <div className="flex flex-col items-center justify-center min-h-[100px] text-center space-y-3">
                             {entries.length === 0 ? (
-                                <p className="text-emerald-800/40 italic text-sm">No entries yet. Start writing <span className="inline-block -rotate-12">🌱</span></p>
+                                <p className={cn("italic text-sm", theme === 'green' ? 'text-emerald-800/40' : theme === 'lavender' ? 'text-purple-800/40' : 'text-rose-800/40')}>No entries yet. Start writing <span className="inline-block -rotate-12">🌱</span></p>
                             ) : (
                                 <div className="w-full space-y-2 max-h-[300px] overflow-y-auto pr-1">
                                     {entries.map(entry => (
@@ -253,15 +253,15 @@ export default function Journal() {
                                             className={cn(
                                                 "w-full text-left p-3 rounded-xl transition-all border",
                                                 selectedEntry?.id === entry.id
-                                                    ? "bg-emerald-100 border-emerald-300 shadow-sm"
-                                                    : "bg-white border-emerald-50 hover:bg-emerald-50 hover:translate-x-1"
+                                                    ? theme === 'green' ? "bg-emerald-100 border-emerald-300 shadow-sm" : theme === 'lavender' ? "bg-purple-100 border-purple-300 shadow-sm" : "bg-rose-100 border-rose-300 shadow-sm"
+                                                    : theme === 'green' ? "bg-white border-emerald-50 hover:bg-emerald-50 hover:translate-x-1" : theme === 'lavender' ? "bg-white border-purple-50 hover:bg-purple-50 hover:translate-x-1" : "bg-white border-rose-50 hover:bg-rose-50 hover:translate-x-1"
                                             )}
                                         >
                                             <div className="flex justify-between items-start">
-                                                <span className="font-bold text-emerald-900 text-sm truncate w-[70%]">{entry.title || 'Untitled'}</span>
-                                                <span className="text-[10px] text-emerald-600 font-mono">{format(new Date(entry.date), 'MMM d')}</span>
+                                                <span className={cn("font-bold text-sm truncate w-[70%]", theme === 'green' ? 'text-emerald-900' : theme === 'lavender' ? 'text-purple-900' : 'text-rose-900')}>{entry.title || 'Untitled'}</span>
+                                                <span className={cn("text-[10px] font-mono", theme === 'green' ? 'text-emerald-600' : theme === 'lavender' ? 'text-purple-600' : 'text-rose-600')}>{format(new Date(entry.date), 'MMM d')}</span>
                                             </div>
-                                            <p className="text-xs text-emerald-800/60 truncate mt-1">{entry.content}</p>
+                                            <p className={cn("text-xs truncate mt-1", theme === 'green' ? 'text-emerald-800/60' : theme === 'lavender' ? 'text-purple-800/60' : 'text-rose-800/60')}>{entry.content}</p>
                                         </button>
                                     ))}
                                 </div>

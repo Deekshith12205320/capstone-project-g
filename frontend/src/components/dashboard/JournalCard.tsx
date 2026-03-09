@@ -13,6 +13,14 @@ export default function JournalCard() {
         theme === 'lavender' ? 'bg-purple-50/60 border-4 border-purple-200 backdrop-blur-md' :
             'bg-rose-50/60 border-4 border-rose-200 backdrop-blur-md';
 
+    const iconColors = {
+        green: 'bg-emerald-100/80 text-emerald-700',
+        lavender: 'bg-purple-100/80 text-purple-700',
+        pink: 'bg-rose-100/80 text-rose-700'
+    };
+
+    const iconClass = iconColors[theme as keyof typeof iconColors] || iconColors.green;
+
     return (
         <Card
             className={cn(
@@ -28,7 +36,7 @@ export default function JournalCard() {
             )} />
 
             <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className="p-2.5 bg-yellow-100/50 rounded-xl text-yellow-700">
+                <div className={cn("p-2.5 rounded-xl transition-colors", iconClass)}>
                     <BookHeart size={24} />
                 </div>
                 <div className="p-2 text-muted/50 group-hover:text-primary transition-colors">
@@ -46,8 +54,8 @@ export default function JournalCard() {
                     <div className="h-2 w-full bg-gray-50 rounded-full" />
                     <div className="h-2 w-3/4 bg-gray-50 rounded-full" />
                     <div className="h-2 w-5/6 bg-gray-50 rounded-full" />
-                    <div className="mt-auto flex items-center gap-2 text-xs font-medium text-emerald-600">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className="mt-auto flex items-center gap-2 text-xs font-medium text-primary">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                         Write today's entry
                     </div>
                 </div>

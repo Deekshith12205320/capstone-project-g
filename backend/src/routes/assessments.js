@@ -77,10 +77,6 @@ router.get('/:type', (req, res) => {
 // POST /assessments/submit
 // Scores assessment, stores latest summary, updates AI mental state
 // -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-// POST /assessments/submit
-// Scores assessment, stores latest summary, updates AI mental state
-// -----------------------------------------------------------------------------
 const submitSchema = z.object({
   type: z.string(),
   answers: z.array(z.number().min(0).max(4))
@@ -99,6 +95,20 @@ router.post('/submit', async (req, res) => {
       return res.status(400).json({
         error: 'Answer count does not match number of questions'
       });
+    }
+
+    const userId = req.user.userId;
+
+    // --- ENFORCE ONCE A DAY LIMIT FOR DAILY ASSESSMENT ---
+    if (type === 'daily') {
+      const latest = await getLatestAssessment(userId);
+      if (latest && latest.assessment === 'daily') {
+        const today = new Date().toDateString();
+        const latestDate = new Date(latest.submittedAt).toDateString();
+        if (today === latestDate) {
+          return res.status(400).json({ error: 'You have already completed your daily check-in today.' });
+        }
+      }
     }
 
     // ---------------------------------------------------------------------------
@@ -121,7 +131,6 @@ router.post('/submit', async (req, res) => {
     // ---------------------------------------------------------------------------
     // Authenticated user identity (JWT / Google OAuth)
     // ---------------------------------------------------------------------------
-    const userId = req.user.userId;
 
     const summary = {
       assessment: type,

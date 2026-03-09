@@ -42,17 +42,32 @@ function getAuthHeader(): Record<string, string> {
     return token ? { 'Authorization': `Bearer ${token}` } : {};
 }
 
+async function handleApiResponse(response: Response, defaultError: string) {
+    if (!response.ok) {
+        let errorMsg = defaultError;
+        try {
+            const data = await response.json();
+            errorMsg = data.error || errorMsg;
+        } catch (e) {
+            // failed to parse json
+        }
+        throw new Error(errorMsg);
+    }
+
+    try {
+        return await response.json();
+    } catch (e) {
+        throw new Error(defaultError + ' (Invalid data received)');
+    }
+}
+
 export async function login(email: string, password: string): Promise<any> {
     const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
     });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Login failed');
-    }
-    return response.json();
+    return handleApiResponse(response, 'Login failed');
 }
 
 export async function register(name: string, email: string, password: string, additionalData?: Partial<UserProfile>): Promise<any> {
@@ -61,11 +76,7 @@ export async function register(name: string, email: string, password: string, ad
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, ...additionalData })
     });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Registration failed');
-    }
-    return response.json();
+    return handleApiResponse(response, 'Registration failed');
 }
 
 
@@ -75,11 +86,7 @@ export async function loginWithGoogle(idToken: string): Promise<any> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken })
     });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Google login failed');
-    }
-    return response.json();
+    return handleApiResponse(response, 'Google login failed');
 }
 
 export async function loginWithGitHub(code: string): Promise<any> {
@@ -88,11 +95,7 @@ export async function loginWithGitHub(code: string): Promise<any> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code })
     });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'GitHub login failed');
-    }
-    return response.json();
+    return handleApiResponse(response, 'GitHub login failed');
 }
 
 export async function sendMessage(text: string): Promise<ChatResponse> {

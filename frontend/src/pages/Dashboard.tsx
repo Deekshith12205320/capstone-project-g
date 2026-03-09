@@ -3,7 +3,7 @@ import MoodFlow from '../components/dashboard/MoodFlow';
 import JournalCard from '../components/dashboard/JournalCard';
 import MentalGarden from '../components/dashboard/MentalGarden';
 import MentalFitnessQuests from '../components/games/MentalFitnessQuests';
-import SpotifyPlayer from '../components/dashboard/SpotifyPlayer';
+import JamendoPlayer from '../components/dashboard/JamendoPlayer';
 import { fetchAssessments, fetchUserProfile, type AssessmentResult } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +15,7 @@ export default function Dashboard() {
     const [displayName, setDisplayName] = useState(authUser?.name?.split(' ')[0] || 'User');
     const [assessments, setAssessments] = useState<AssessmentResult[]>([]);
     const [latestAssessment, setLatestAssessment] = useState<AssessmentResult | null>(null);
+    const [hasCompletedToday, setHasCompletedToday] = useState(false);
     const [stats, setStats] = useState<DashboardStats | null>(null);
 
     useEffect(() => {
@@ -28,7 +29,15 @@ export default function Dashboard() {
             setAssessments(data);
             if (data.length > 0) {
                 const sorted = [...data].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-                setLatestAssessment(sorted[0]);
+                const latest = sorted[0];
+                setLatestAssessment(latest);
+
+                // Check if completed today
+                const today = new Date().toDateString();
+                const latestDate = new Date(latest.timestamp).toDateString();
+                if (latest.type === 'daily' && latestDate === today) {
+                    setHasCompletedToday(true);
+                }
             }
 
             // Load Platform Profile to ensure name is up to date
@@ -59,7 +68,10 @@ export default function Dashboard() {
                 <DailyAssessmentCard
                     daysActive={stats?.daysActive || 0}
                     avgMood={stats?.avgMood || 0}
-                    onStartAssessment={() => navigate('/assessment/daily')}
+                    hasCompletedToday={hasCompletedToday}
+                    onStartAssessment={() => {
+                        if (!hasCompletedToday) navigate('/assessment/daily');
+                    }}
                 />
             </div>
 
@@ -75,7 +87,7 @@ export default function Dashboard() {
                         <JournalCard />
                     </div>
                     <div className="flex-1">
-                        <SpotifyPlayer />
+                        <JamendoPlayer />
                     </div>
                 </div>
             </div>

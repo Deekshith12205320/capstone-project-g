@@ -1,4 +1,4 @@
-import { LayoutDashboard, MessageSquare, History, User, LogOut, Gamepad2, ChevronLeft, ChevronRight, HeartHandshake } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, History, User, LogOut, Gamepad2, ChevronLeft, ChevronRight, HeartHandshake, Sparkles } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
@@ -11,6 +11,7 @@ const navItems = [
     { icon: MessageSquare, label: 'Chat', path: '/chat' },
     { icon: History, label: 'History', path: '/history' },
     { icon: Gamepad2, label: 'Quests', path: '/quests' },
+    { icon: Sparkles, label: 'Yoga', path: '/yoga' },
     { icon: HeartHandshake, label: 'Support Network', path: '/support' },
     { icon: User, label: 'Profile', path: '/profile' },
 ];
