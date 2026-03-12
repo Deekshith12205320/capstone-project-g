@@ -9,6 +9,8 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { DailyAssessmentCard } from '../components/dashboard/DailyAssessmentCard';
 import { fetchDashboardStats, type DashboardStats } from '../services/api';
+import DailyTaskModal from '../components/dashboard/DailyTaskModal';
+
 export default function Dashboard() {
     const { user: authUser } = useAuth();
     const navigate = useNavigate();
@@ -96,6 +98,8 @@ export default function Dashboard() {
                 <MentalGarden latestAssessment={latestAssessment} />
                 <MentalFitnessQuests />
             </div>
+
+            <DailyTaskModal />
         </div>
     );
 }

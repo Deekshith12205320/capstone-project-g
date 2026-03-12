@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Music, Heart, Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { Music, Heart, Play, Pause, SkipBack, SkipForward, Shuffle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAmbience } from '../../context/AmbienceContext';
 import { cn } from '../../lib/utils';
-import { fetchPopularJamendoTracks, type JamendoTrack } from '../../services/jamendoApi';
+import { fetchPopularJamendoTracks, searchJamendoTracks, type JamendoTrack } from '../../services/jamendoApi';
 
 export interface SavedTrack {
     id: string;
@@ -70,6 +70,22 @@ export default function JamendoPlayer() {
         const prevIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
         setCurrentTrackIndex(prevIndex);
         setIsPlaying(true);
+    };
+
+    const handleSurpriseMe = async () => {
+        setIsLoading(true);
+        const moods = ['relax', 'chill', 'happy', 'ambient', 'focus', 'calm'];
+        const randomMood = moods[Math.floor(Math.random() * moods.length)];
+        const newTracks = await searchJamendoTracks(randomMood, 'popularity_total');
+        if (newTracks.length > 0) {
+            setTracks(newTracks);
+            // Also shuffle the fetched array for true randomness
+            const shuffledTracks = [...newTracks].sort(() => 0.5 - Math.random());
+            setTracks(shuffledTracks);
+            setCurrentTrackIndex(0);
+            setIsPlaying(true);
+        }
+        setIsLoading(false);
     };
 
     const isTrackSaved = currentTrack ? savedTracks.some(t => t.id === currentTrack.id || t.title === currentTrack.name) : false;
@@ -194,6 +210,15 @@ export default function JamendoPlayer() {
                             title={isTrackSaved ? "Remove from Library" : "Save to Library"}
                         >
                             <Heart size={16} className={isTrackSaved ? "fill-red-500 text-red-500" : "text-gray-500"} />
+                        </button>
+
+                        <button
+                            className="p-2 rounded-full hover:bg-black/5 text-gray-700 transition-colors"
+                            onClick={handleSurpriseMe}
+                            title="Surprise me with random mood tracks"
+                            disabled={isLoading}
+                        >
+                            <Shuffle size={16} className={isLoading ? "opacity-50" : ""} />
                         </button>
                     </div>
                 </div>

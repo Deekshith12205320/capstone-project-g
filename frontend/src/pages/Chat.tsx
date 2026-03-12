@@ -289,8 +289,15 @@ export default function Chat() {
                         timestamp: new Date()
                     }]);
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error(error);
+                setAssessment(prev => ({ ...prev, active: false }));
+                setMessages(prev => [...prev, {
+                    id: Date.now().toString(),
+                    content: error.message || "Failed to submit assessment.",
+                    sender: 'system',
+                    timestamp: new Date()
+                }]);
             } finally {
                 setIsLoading(false);
             }

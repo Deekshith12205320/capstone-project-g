@@ -26,6 +26,8 @@ import {
   getAssessmentHistory
 } from '../services/assessmentStore.js';
 
+import { generateDynamicQuestions } from '../services/llm.js';
+
 const router = Router();
 
 // -----------------------------------------------------------------------------
@@ -57,13 +59,54 @@ router.get('/history', async (req, res) => {
 // GET /assessments/:type
 // Returns questions + scale for a specific assessment
 // -----------------------------------------------------------------------------
-router.get('/:type', (req, res) => {
-  const assessment = getAssessment(req.params.type);
+router.get('/:type', async (req, res) => {
+  const type = req.params.type;
+  const assessment = getAssessment(type);
 
   if (!assessment) {
     return res.status(404).json({ error: 'Assessment not found' });
   }
 
+  // --- DYNAMIC DAILY ASSESSMENT LOGIC ---
+  if (type === 'daily') {
+    try {
+      const userId = req.user.userId;
+      const history = await getAssessmentHistory(userId);
+
+      // If user has history (e.g. at least 1 past check-in), generate dynamic questions
+      if (history && history.length > 0) {
+        // Grab last 7 days to give LLM context
+        const recentHistory = history.slice(0, 7).map(h => ({
+          date: new Date(h.timestamp).toISOString().split('T')[0],
+          severity: h.severity,
+          score: h.score,
+          type: h.type
+        }));
+
+        const dynamicQuestions = await generateDynamicQuestions(recentHistory);
+
+        if (dynamicQuestions && dynamicQuestions.length === assessment.items.length) {
+          // Replace the static items with the dynamic ones
+          const dynamicItems = assessment.items.map((item, index) => ({
+            ...item,
+            text: dynamicQuestions[index]
+          }));
+
+          return res.json({
+            id: assessment.id,
+            title: 'Your Custom Daily Check-in',
+            description: 'These questions were generated specifically for you based on how you have been feeling lately.',
+            scale: assessment.scale,
+            items: dynamicItems
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to generate dynamic assessment, falling back to static", e);
+    }
+  }
+
+  // Fallback / standard response
   res.json({
     id: assessment.id,
     title: assessment.title,
@@ -79,7 +122,7 @@ router.get('/:type', (req, res) => {
 // -----------------------------------------------------------------------------
 const submitSchema = z.object({
   type: z.string(),
-  answers: z.array(z.number().min(0).max(4))
+  answers: z.array(z.number().min(0).max(10))
 });
 
 router.post('/submit', async (req, res) => {

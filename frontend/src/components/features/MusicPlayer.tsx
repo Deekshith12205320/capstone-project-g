@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Music, Play, Pause, SkipForward, Heart } from 'lucide-react';
+import { Music, Play, Pause, SkipForward, Heart, CloudRain, TreePine, Waves, Flame, Wind, Droplets, Moon, Coffee } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import type { SavedTrack } from '../dashboard/JamendoPlayer';
@@ -29,12 +29,66 @@ const DEFAULT_TRACKS: SavedTrack[] = [
     }
 ];
 
+const AMBIENT_SOUNDS = [
+    { id: 'rain', name: 'Rain', icon: CloudRain, url: 'https://raw.githubusercontent.com/rafaelreis-hotmart/Audio-Sample-files/master/sample.mp3' },
+    { id: 'forest', name: 'Forest', icon: TreePine, url: 'https://raw.githubusercontent.com/thelinmichael/spotify-web-api-node/master/test/fixtures/track_1.mp3' },
+    { id: 'ocean', name: 'Ocean Waves', icon: Waves, url: 'https://raw.githubusercontent.com/rafaelreis-hotmart/Audio-Sample-files/master/sample.mp3' },
+    { id: 'fire', name: 'Campfire', icon: Flame, url: 'https://raw.githubusercontent.com/thelinmichael/spotify-web-api-node/master/test/fixtures/track_1.mp3' },
+    { id: 'wind', name: 'Wind', icon: Wind, url: 'https://raw.githubusercontent.com/rafaelreis-hotmart/Audio-Sample-files/master/sample.mp3' },
+    { id: 'river', name: 'River', icon: Droplets, url: 'https://raw.githubusercontent.com/thelinmichael/spotify-web-api-node/master/test/fixtures/track_1.mp3' },
+    { id: 'night', name: 'Crickets', icon: Moon, url: 'https://raw.githubusercontent.com/rafaelreis-hotmart/Audio-Sample-files/master/sample.mp3' },
+    { id: 'cafe', name: 'Cafe', icon: Coffee, url: 'https://raw.githubusercontent.com/thelinmichael/spotify-web-api-node/master/test/fixtures/track_1.mp3' },
+];
+
 export default function MusicPlayer() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
     const [savedTracks, setSavedTracks] = useState<SavedTrack[]>([]);
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
+    const [activeAmbient, setActiveAmbient] = useState<string | null>(null);
+
+    const toggleAmbient = (soundId: string, url: string) => {
+        if (!ambientAudioRef.current) return;
+
+        if (activeAmbient === soundId) {
+            ambientAudioRef.current.pause();
+            setActiveAmbient(null);
+        } else {
+            ambientAudioRef.current.src = url;
+            ambientAudioRef.current.loop = true;
+            ambientAudioRef.current.volume = 0.2;
+            ambientAudioRef.current.play().catch(e => console.error("Ambient play failed:", e));
+            setActiveAmbient(soundId);
+        }
+    };
+
+    // Autoplay random ambient sound on mount once
+    useEffect(() => {
+        if (!ambientAudioRef.current) return;
+        const randomSound = AMBIENT_SOUNDS[Math.floor(Math.random() * AMBIENT_SOUNDS.length)];
+        
+        // Timeout ensures the ref is fully mounted and avoids some strict browser policies immediately on render
+        setTimeout(() => {
+            if (ambientAudioRef.current && !activeAmbient) {
+                ambientAudioRef.current.src = randomSound.url;
+                ambientAudioRef.current.loop = true;
+                ambientAudioRef.current.volume = 0.2;
+                
+                // Attempt autoplay
+                const playPromise = ambientAudioRef.current.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        setActiveAmbient(randomSound.id);
+                    }).catch(error => {
+                        console.log("Autoplay prevented by browser. User interaction required:", error);
+                        // Optional: we can set a state here to show a 'Click anywhere to play ambiance' toast
+                    });
+                }
+            }
+        }, 1000);
+    }, []);
 
     // Load saved tracks on mount & listen to storage events
     useEffect(() => {
@@ -149,7 +203,7 @@ export default function MusicPlayer() {
             dragMomentum={false}
             whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
             initial={{ bottom: '1.5rem', right: '1.5rem' }}
-            className="fixed z-50 flex items-center gap-2 p-2 rounded-full bg-white/80 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/50 transition-colors duration-300 hover:bg-white/95 group cursor-grab"
+            className="fixed z-50 flex flex-col p-2 group-hover:p-3 rounded-full group-hover:rounded-3xl bg-white/80 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/50 transition-all duration-300 hover:bg-white/95 group cursor-grab"
         >
             <audio
                 ref={audioRef}
@@ -157,58 +211,86 @@ export default function MusicPlayer() {
                 onPause={() => setIsPlaying(false)}
                 onPlay={() => setIsPlaying(true)}
             />
+            <audio ref={ambientAudioRef} />
 
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-md relative overflow-hidden">
-                {currentTrack.imageUrl ? (
-                    <>
-                        <img src={currentTrack.imageUrl} alt="art" className="absolute inset-0 w-full h-full object-cover opacity-60" />
-                        <Music size={16} className={cn("relative z-10", isPlaying && "animate-pulse")} />
-                    </>
-                ) : (
-                    <Music size={16} className={cn(isPlaying && "animate-pulse")} />
-                )}
+            {/* Top Row: Ambient Sounds */}
+            <div className="w-0 h-0 opacity-0 overflow-hidden group-hover:w-full group-hover:h-auto group-hover:opacity-100 flex items-center justify-between gap-1 border-black/5 group-hover:border-b group-hover:pb-2 group-hover:mb-2 px-1 transition-all duration-300">
+                {AMBIENT_SOUNDS.map((sound) => {
+                    const Icon = sound.icon;
+                    const isActive = activeAmbient === sound.id;
+                    return (
+                        <button
+                            key={sound.id}
+                            onClick={() => toggleAmbient(sound.id, sound.url)}
+                            className={cn(
+                                "p-1.5 rounded-full transition-all duration-300 relative group/ambient flex-shrink-0 cursor-default",
+                                isActive ? "bg-[#849b87]/20 text-[#849b87] scale-110" : "hover:bg-black/5 text-gray-500 hover:text-gray-800"
+                            )}
+                            onPointerDown={(e) => e.stopPropagation()} /* Prevent drag from activating on buttons */
+                        >
+                            <Icon size={14} />
+                            <span className="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-0.5 rounded opacity-0 group-hover/ambient:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                {sound.name}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
 
-            <div className="flex flex-col w-0 group-hover:w-32 overflow-hidden transition-all duration-300 group-hover:px-2 select-none">
-                <span className="text-sm font-bold text-gray-800 whitespace-nowrap truncate leading-tight">
-                    {currentTrack.title}
-                </span>
-                <span className="text-[10px] text-muted truncate">
-                    {currentTrack.artist}
-                </span>
-            </div>
-
-            <div className="flex items-center gap-1 w-0 overflow-hidden group-hover:w-auto transition-all duration-300 opacity-0 group-hover:opacity-100 pl-1">
-                <button
-                    onClick={togglePlay}
-                    className="p-2 hover:bg-black/5 rounded-full text-gray-800 transition-colors flex items-center justify-center"
-                    title={isPlaying ? "Pause" : "Play"}
-                >
-                    {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
-                </button>
-
-                <button
-                    onClick={nextTrack}
-                    className="p-2 hover:bg-black/5 rounded-full text-gray-800 transition-colors flex items-center justify-center"
-                    title="Next Track"
-                >
-                    <SkipForward size={16} />
-                </button>
-
-                <button
-                    onClick={toggleSave}
-                    className={cn(
-                        "p-2 hover:bg-black/5 rounded-full transition-colors flex items-center justify-center",
-                        isCurrentlySaved ? "text-red-500 hover:text-red-600" : "text-gray-400 hover:text-gray-600"
+            {/* Bottom Row: Main Music Player */}
+            <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-md relative overflow-hidden flex-shrink-0">
+                    {currentTrack.imageUrl ? (
+                        <>
+                            <img src={currentTrack.imageUrl} alt="art" className="absolute inset-0 w-full h-full object-cover opacity-60" />
+                            <Music size={16} className={cn("relative z-10", isPlaying && "animate-pulse")} />
+                        </>
+                    ) : (
+                        <Music size={16} className={cn(isPlaying && "animate-pulse")} />
                     )}
-                    title={isCurrentlySaved ? "Remove from Library" : "Save to Library"}
-                >
-                    <Heart size={16} fill={isCurrentlySaved ? "currentColor" : "none"} />
-                </button>
-            </div>
+                </div>
 
-            {/* Drag Handle Indicator */}
-            <div className="w-1.5 h-6 bg-gray-200 rounded-full mx-1 opacity-[0.4] group-hover:opacity-[0.8] transition-opacity cursor-grab" />
+                <div className="flex flex-col w-0 group-hover:w-32 overflow-hidden transition-all duration-300 group-hover:px-2 select-none">
+                    <span className="text-sm font-bold text-gray-800 whitespace-nowrap truncate leading-tight">
+                        {currentTrack.title}
+                    </span>
+                    <span className="text-[10px] text-muted truncate">
+                        {currentTrack.artist}
+                    </span>
+                </div>
+
+                <div className="flex items-center gap-1 w-0 overflow-hidden group-hover:w-auto transition-all duration-300 opacity-0 group-hover:opacity-100 pl-1">
+                    <button
+                        onClick={togglePlay}
+                        className="p-2 hover:bg-black/5 rounded-full text-gray-800 transition-colors flex items-center justify-center"
+                        title={isPlaying ? "Pause" : "Play"}
+                    >
+                        {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+                    </button>
+
+                    <button
+                        onClick={nextTrack}
+                        className="p-2 hover:bg-black/5 rounded-full text-gray-800 transition-colors flex items-center justify-center"
+                        title="Next Track"
+                    >
+                        <SkipForward size={16} />
+                    </button>
+
+                    <button
+                        onClick={toggleSave}
+                        className={cn(
+                            "p-2 hover:bg-black/5 rounded-full transition-colors flex items-center justify-center",
+                            isCurrentlySaved ? "text-red-500 hover:text-red-600" : "text-gray-400 hover:text-gray-600"
+                        )}
+                        title={isCurrentlySaved ? "Remove from Library" : "Save to Library"}
+                    >
+                        <Heart size={16} fill={isCurrentlySaved ? "currentColor" : "none"} />
+                    </button>
+                </div>
+
+                {/* Drag Handle Indicator */}
+                <div className="w-1.5 h-6 bg-gray-200 rounded-full mx-1 opacity-[0.4] group-hover:opacity-[0.8] transition-opacity cursor-grab flex-shrink-0" />
+            </div>
         </motion.div>
     );
 }

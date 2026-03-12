@@ -279,7 +279,7 @@ export default function History() {
                                         <Award size={16} /> SAI Insights
                                     </div>
                                     <p className="text-green-900 leading-relaxed font-medium">
-                                        {selectedAssessment.insight.replace(/System Prompt:|User:|AI:/g, '').trim()}
+                                        {selectedAssessment.insight ? selectedAssessment.insight.replace(/System Prompt:|User:|AI:/g, '').trim() : "No AI insights available for this session."}
                                     </p>
                                 </div>
 

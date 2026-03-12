@@ -1,7 +1,6 @@
-// src/services/llm.js
 import 'dotenv/config';
 import OpenAI from 'openai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { DYNAMIC_ASSESSMENT_PROMPT } from './prompts.js';
 
 // -----------------------------------------------------------------------------
 // Initialize Clients
@@ -10,8 +9,6 @@ const groq = process.env.GROQ_API_KEY ? new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
   baseURL: 'https://api.groq.com/openai/v1',
 }) : null;
-
-const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
 
 // -----------------------------------------------------------------------------
 // Helper: enforce a gentle follow-up question (non-crisis only)
@@ -36,99 +33,62 @@ function ensureFollowUpQuestion(text) {
 // -----------------------------------------------------------------------------
 export async function llmChat(
   messages,
-  { temperature = 0.5, maxTokens = 700, forceGemini = false } = {}
+  { temperature = 0.5, maxTokens = 700 } = {}
 ) {
-  const provider = (process.env.LLM_PROVIDER || 'mock').toLowerCase();
-
-  // ---------------------------------------------------------------------------
-  // MOCK MODE (no API key)
-  // ---------------------------------------------------------------------------
-  if (provider === 'mock') {
+  if (!groq) {
     return "I am currently in demo mode. Please configure your API keys in .env to enable my full capabilities.";
   }
 
-  // ---------------------------------------------------------------------------
-  // GROQ MODE (Using OpenAI SDK)
-  // ---------------------------------------------------------------------------
-  if (provider === 'groq' && !forceGemini) {
-    if (!groq) {
-      console.warn('[Groq] Client not initialized, falling back to Gemini');
-      return llmChat(messages, { temperature, maxTokens, forceGemini: true });
-    }
+  try {
+    const completion = await groq.chat.completions.create({
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+      messages: messages.map(m => ({
+        role: m.role === 'system' ? 'system' : m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content
+      })),
+      temperature,
+      max_tokens: maxTokens,
+    });
 
-    try {
-      const completion = await groq.chat.completions.create({
-        model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
-        messages: messages.map(m => ({
-          role: m.role === 'system' ? 'system' : m.role === 'assistant' ? 'assistant' : 'user',
-          content: m.content
-        })),
-        temperature,
-        max_tokens: maxTokens,
-      });
-
-      return completion.choices[0]?.message?.content || '';
-    } catch (err) {
-      console.error('[Groq Error]', err.message);
-      // Automatic fallback to Gemini if Groq fails
-      return llmChat(messages, { temperature, maxTokens, forceGemini: true });
-    }
+    return completion.choices[0]?.message?.content || '';
+  } catch (err) {
+    console.error('[Groq Error]', err.message);
+    return "I'm here with you, but I'm having a small technical hiccup. Even so, your feelings are valid—would you like to tell me more about what's on your mind?";
   }
+}
 
-  // ---------------------------------------------------------------------------
-  // GEMINI MODE (Using Google SDK)
-  // ---------------------------------------------------------------------------
-  if (provider === 'gemini' || forceGemini) {
-    if (!genAI) {
-      return "I'm having trouble connecting to my brain right now. Please check if the API keys are correctly set.";
-    }
+// -----------------------------------------------------------------------------
+// Dynamic Assessment Generation
+// -----------------------------------------------------------------------------
 
-    try {
-      const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
-      // Strip 'models/' prefix if present for the SDK
-      const sanitizedModelName = modelName.startsWith('models/') ? modelName.split('/')[1] : modelName;
+export async function generateDynamicQuestions(historyContext) {
+  if (!groq) return null;
 
-      const model = genAI.getGenerativeModel({ model: sanitizedModelName });
-
-      // Separate system instruction
-      const systemInstruction = messages
-        .filter(m => m.role === 'system')
-        .map(m => m.content)
-        .join('\n\n');
-
-      // Convert history for Gemini format
-      const history = messages
-        .filter(m => m.role !== 'system')
-        .slice(0, -1) // All but the last user message
-        .map(m => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content }],
-        }));
-
-      const lastUserMsg = messages[messages.length - 1].content;
-
-      const chat = model.startChat({
-        history,
-        systemInstruction,
-        generationConfig: {
-          temperature,
-          maxOutputTokens: maxTokens,
+  try {
+    const completion = await groq.chat.completions.create({
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+      response_format: { type: "json_object" }, // ensure JSON output
+      messages: [
+        {
+          role: 'system',
+          content: DYNAMIC_ASSESSMENT_PROMPT
         },
-      });
+        {
+          role: 'user',
+          content: `Here is my assessment history for the past 7 days:\n\n${JSON.stringify(historyContext, null, 2)}\n\nPlease generate 10 targeted questions in a JSON array under the key "questions".`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 500
+    });
 
-      const result = await chat.sendMessage(lastUserMsg);
-      const response = await result.response;
-      return response.text();
-    } catch (err) {
-      console.error('[Gemini Error]', err.message);
-
-      if (err.message?.includes('quota') || err.message?.includes('429')) {
-        return "I'm a little overwhelmed with requests right now. Let's take a short break and try again in a moment. I'm still here for you.";
-      }
-
-      return "I'm here with you, but I'm having a small technical hiccup. Even so, your feelings are valid—would you like to tell me more about what's on your mind?";
+    const result = JSON.parse(completion.choices[0]?.message?.content || '{}');
+    if (result.questions && Array.isArray(result.questions) && result.questions.length === 10) {
+      return result.questions;
     }
+    return null;
+  } catch (e) {
+    console.error('[Groq Dynamic Assessment Error]', e.message);
+    return null;
   }
-
-  throw new Error(`Unsupported LLM provider: ${provider}`);
 }

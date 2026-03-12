@@ -1,6 +1,7 @@
 // backend/src/routes/dashboard/stats.js
 import { Router } from 'express';
 import { AssessmentResult } from '../../models/AssessmentResult.js';
+import { User } from '../../models/User.js';
 
 const router = Router();
 
@@ -64,6 +65,47 @@ router.get('/stats', async (req, res) => {
     } catch (err) {
         console.error('Error fetching dashboard stats:', err);
         res.status(500).json({ error: 'Failed to fetch dashboard stats' });
+    }
+});
+
+// POST /dashboard/game-score
+router.post('/game-score', async (req, res) => {
+    try {
+        const { game, score } = req.body;
+        if (!score || score <= 0) return res.json({ ignored: true });
+
+        const userId = req.user.userId;
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        user.progress = (user.progress || 0) + score;
+        let earnedCoins = Math.floor(score / 50); // 1 coin per 50 score
+
+        // leveling logic
+        let leveledUp = false;
+        let threshold = (user.level || 1) * 1000;
+
+        while (user.progress >= threshold) {
+            user.level = (user.level || 1) + 1;
+            user.progress = user.progress - threshold;
+            earnedCoins += 50; // Bonus coins for leveling up
+            leveledUp = true;
+            threshold = user.level * 1000;
+        }
+
+        user.coins = (user.coins || 0) + earnedCoins;
+        await user.save();
+
+        res.json({
+            earnedCoins,
+            totalCoins: user.coins,
+            level: user.level,
+            progress: user.progress,
+            leveledUp
+        });
+    } catch (err) {
+        console.error('Error saving game score:', err);
+        res.status(500).json({ error: 'Failed to save game score' });
     }
 });
 

@@ -378,6 +378,32 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
     }
 }
 
+export interface GameScoreResponse {
+    earnedCoins: number;
+    totalCoins: number;
+    level: number;
+    progress: number;
+    leveledUp: boolean;
+}
+
+export async function submitGameScore(game: string, score: number): Promise<GameScoreResponse | null> {
+    try {
+        const response = await fetch(`${API_URL}/dashboard/game-score`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeader()
+            },
+            body: JSON.stringify({ game, score })
+        });
+        if (!response.ok) throw new Error('Failed to submit game score');
+        return await response.json();
+    } catch (error) {
+        console.error('Error submitting game score:', error);
+        return null;
+    }
+}
+
 export interface JournalEntry {
     id: string;
     title: string;

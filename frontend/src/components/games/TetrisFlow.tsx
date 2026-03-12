@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui/Button';
-import { RotateCcw, Play, Pause, X } from 'lucide-react';
+import { RotateCcw, Play, Pause, X, Coins, TrendingUp } from 'lucide-react';
+import { submitGameScore, type GameScoreResponse } from '../../services/api';
 
 const BOARD_WIDTH = 10;
 const BOARD_HEIGHT = 20;
@@ -39,6 +40,13 @@ export default function TetrisFlow({ isOpen, onClose }: { isOpen: boolean; onClo
     const [rows, setRows] = useState(0);
     const [level, setLevel] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
+    const [reward, setReward] = useState<GameScoreResponse | null>(null);
+
+    useEffect(() => {
+        if (gameOver && score > 0) {
+            submitGameScore('tetris', score).then(res => setReward(res));
+        }
+    }, [gameOver, score]);
 
     // Board Collision detection
     const checkCollision = (tempPlayer: any, board: any, { x: moveX, y: moveY }: { x: number; y: number }) => {
@@ -224,6 +232,7 @@ export default function TetrisFlow({ isOpen, onClose }: { isOpen: boolean; onClo
         setRows(0);
         setLevel(0);
         setIsPaused(false);
+        setReward(null);
     };
 
     if (!isOpen) return null;
@@ -269,8 +278,22 @@ export default function TetrisFlow({ isOpen, onClose }: { isOpen: boolean; onClo
 
                     <div className="mt-auto space-y-3">
                         {gameOver ? (
-                            <div className="text-red-400 font-bold text-xl text-center mb-4 uppercase tracking-widest">
-                                Game Over
+                            <div className="flex flex-col items-center mb-4">
+                                <span className="text-red-400 font-bold text-xl uppercase tracking-widest mb-2">
+                                    Game Over
+                                </span>
+                                {reward && (
+                                    <div className="bg-white/10 px-4 py-2 rounded-xl flex flex-col items-center border border-white/5">
+                                        <span className="text-yellow-400 font-bold flex items-center gap-2">
+                                            <Coins size={16} /> +{reward.earnedCoins} Coins
+                                        </span>
+                                        {reward.leveledUp && (
+                                            <span className="text-emerald-400 text-xs mt-1 font-bold flex items-center gap-1 animate-pulse">
+                                                <TrendingUp size={12} /> Level Up! (Lvl {reward.level})
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         ) : null}
 

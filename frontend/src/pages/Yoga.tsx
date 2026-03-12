@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Wind, Activity, Play, Eye, ShieldCheck } from 'lucide-react';
@@ -34,9 +34,6 @@ const SOMATIC_PROTOCOLS: Record<string, { title: string; protocol: string }> = {
 export default function Yoga() {
     const { theme } = useAmbience(); // Restored Ambience context
 
-    // --- State: Environmental ---
-    const [isNightMode, setIsNightMode] = useState(false);
-
     // --- State: SOS Crisis ---
     const [sosMode, setSosMode] = useState(false);
     const [sosStep, setSosStep] = useState(5);
@@ -59,6 +56,16 @@ export default function Yoga() {
 
     // --- State: Video Overlay Practice ---
     const [guidedPracticeActive, setGuidedPracticeActive] = useState(false);
+
+    // --- Audio Refs for VNS Pacer ---
+    const inhaleAudio = useRef<HTMLAudioElement | null>(null);
+    const exhaleAudio = useRef<HTMLAudioElement | null>(null);
+
+    // Initialize audio only on mount
+    useEffect(() => {
+        inhaleAudio.current = new Audio('https://cdn.pixabay.com/download/audio/2023/10/06/audio_f25b290cb6.mp3');
+        exhaleAudio.current = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_2760a5eab4.mp3');
+    }, []);
 
 
     // --- Effects ---
@@ -121,13 +128,7 @@ export default function Yoga() {
         loadData();
     }, []);
 
-    // Circadian Rhythm (Check local time)
-    useEffect(() => {
-        const hour = new Date().getHours();
-        if (hour >= 20 || hour <= 5) { // 8 PM to 5 AM
-            setIsNightMode(true);
-        }
-    }, []);
+
 
     // VNS Breathing Pacer (5.5s inhale, 5.5s exhale for Coherent Breathing)
     useEffect(() => {
@@ -135,6 +136,18 @@ export default function Yoga() {
         if (vnsActive) {
             const runCycle = (phase: 'inhale' | 'exhale') => {
                 setVnsPhase(phase);
+
+                // Play audio cue
+                if (phase === 'inhale' && inhaleAudio.current) {
+                    inhaleAudio.current.currentTime = 0;
+                    inhaleAudio.current.volume = 0.4;
+                    inhaleAudio.current.play().catch(e => console.log('Audio play blocked:', e));
+                } else if (phase === 'exhale' && exhaleAudio.current) {
+                    exhaleAudio.current.currentTime = 0;
+                    exhaleAudio.current.volume = 0.3;
+                    exhaleAudio.current.play().catch(e => console.log('Audio play blocked:', e));
+                }
+
                 timer = setTimeout(() => {
                     runCycle(phase === 'inhale' ? 'exhale' : 'inhale');
                 }, 5500); // 5.5 seconds
@@ -183,16 +196,14 @@ export default function Yoga() {
     // --- Render Helpers ---
 
     // Clinical Zen Colors honoring standard app themes
-    const palette = isNightMode
-        ? { bg: 'bg-[#2d2a26]', text: 'text-[#e6ceb3]', card: 'bg-[#3b3631]', accent: 'bg-[#b67a42]', border: 'border-[#4a443e]', highlight: 'text-[#ffb86c]' }
-        : {
-            bg: theme === 'green' ? 'bg-[#ecfdf5]' : theme === 'lavender' ? 'bg-[#f5f3ff]' : 'bg-[#fff1f2]',
-            text: 'text-[#334155]',
-            card: 'bg-white/80 backdrop-blur-md',
-            accent: theme === 'green' ? 'bg-[#10b981]' : theme === 'lavender' ? 'bg-[#8b5cf6]' : 'bg-[#f43f5e]',
-            border: theme === 'green' ? 'border-emerald-200' : theme === 'lavender' ? 'border-violet-200' : 'border-rose-200',
-            highlight: theme === 'green' ? 'text-emerald-600' : theme === 'lavender' ? 'text-violet-600' : 'text-rose-600'
-        };
+    const palette = {
+        bg: theme === 'green' ? 'bg-[#ecfdf5]' : theme === 'lavender' ? 'bg-[#f5f3ff]' : 'bg-[#fff1f2]',
+        text: 'text-[#334155]',
+        card: 'bg-white/80 backdrop-blur-md',
+        accent: theme === 'green' ? 'bg-[#10b981]' : theme === 'lavender' ? 'bg-[#8b5cf6]' : 'bg-[#f43f5e]',
+        border: theme === 'green' ? 'border-emerald-200' : theme === 'lavender' ? 'border-violet-200' : 'border-rose-200',
+        highlight: theme === 'green' ? 'text-emerald-600' : theme === 'lavender' ? 'text-violet-600' : 'text-rose-600'
+    };
 
     // --- Modal Renders ---
     if (sosMode) {
@@ -275,12 +286,12 @@ export default function Yoga() {
     // --- Main Dashboard ---
 
     return (
-        <div className={`min-h-screen p-8 transition-colors duration-1000 relative ${palette.bg} ${palette.text} font-sans`}>
-
-            {/* Circadian Overlay indication */}
-            {isNightMode && (
-                <div className="absolute top-0 left-0 w-full h-full bg-amber-900/5 pointer-events-none mix-blend-multiply z-10" />
-            )}
+        <div className={`min-h-screen p-8 transition-colors duration-1000 relative ${palette.bg} ${palette.text} font-sans overflow-hidden`}>
+            {/* Dynamic background ambient blobs to give the page a fuller look */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-br from-white/60 to-transparent blur-[120px] mix-blend-overlay animate-[spin_60s_linear_infinite]" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-tl from-white/40 to-transparent blur-[150px] mix-blend-overlay animate-[spin_90s_reverse_infinite]" />
+            </div>
 
             <div className="max-w-7xl mx-auto relative z-20">
 
@@ -291,7 +302,7 @@ export default function Yoga() {
                             Clinical Practice Space
                         </h1>
                         <p className="text-sm opacity-70 flex items-center gap-2">
-                            {isNightMode ? 'Sleep Hygiene Mode Active (Low Blue-Light)' : 'Regulating your nervous system'}
+                            Regulating your nervous system
                         </p>
                     </div>
 
@@ -309,13 +320,16 @@ export default function Yoga() {
                     <div className="lg:col-span-5 space-y-6">
 
                         {/* Somatic Map (Seated Yoga Pose) */}
-                        <Card className={`p-6 rounded-3xl border shadow-sm ${palette.card} ${palette.border} relative overflow-hidden h-full min-h-[400px]`}>
-                            <div className="flex items-center gap-3 mb-6">
+                        <Card className={`p-6 rounded-3xl border shadow-xl bg-gradient-to-br from-white/60 to-white/40 backdrop-blur-2xl ${palette.border} relative overflow-hidden h-full min-h-[400px] group`}>
+                            {/* Decorative backing inside the card */}
+                            <div className="absolute inset-0 bg-white/20 group-hover:bg-transparent transition-all duration-700 pointer-events-none z-0" />
+
+                            <div className="relative z-10 flex items-center gap-3 mb-6">
                                 <Activity size={20} className={palette.highlight} />
                                 <h2 className="font-bold text-sm tracking-wide uppercase">Somatic Tension Map</h2>
                             </div>
 
-                            <div className="flex flex-col items-center justify-center p-4 bg-black/5 rounded-2xl mb-4 relative min-h-[300px]">
+                            <div className="relative z-10 flex flex-col items-center justify-center p-4 bg-gradient-to-t from-black/5 to-transparent border border-white/50 shadow-inner rounded-3xl mb-4 min-h-[300px]">
 
                                 {/* User Uploaded Seated Silhouette Image */}
                                 <div className="relative w-full max-w-[200px] aspect-[3/4] mx-auto">
@@ -324,8 +338,8 @@ export default function Yoga() {
                                         alt="Seated Yoga Silhouette"
                                         className="absolute inset-0 w-full h-full object-contain pointer-events-none"
                                         style={{
-                                            mixBlendMode: isNightMode ? 'screen' : 'multiply',
-                                            filter: isNightMode ? 'invert(1) opacity(0.7)' : 'opacity(0.8)'
+                                            mixBlendMode: 'multiply',
+                                            filter: 'opacity(0.8)'
                                         }}
                                     />
 

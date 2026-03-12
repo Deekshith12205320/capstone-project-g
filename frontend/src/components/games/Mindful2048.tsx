@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../ui/Button';
-import { RotateCcw, X, Target } from 'lucide-react';
+import { RotateCcw, X, Target, Coins, TrendingUp } from 'lucide-react';
+import { submitGameScore, type GameScoreResponse } from '../../services/api';
 
 const GRID_SIZE = 4;
 const CELL_COUNT = GRID_SIZE * GRID_SIZE;
@@ -10,6 +11,13 @@ export default function Mindful2048({ isOpen, onClose }: { isOpen: boolean; onCl
     const [score, setScore] = useState(0);
     const [gameOver, setGameOver] = useState(false);
     const [won, setWon] = useState(false);
+    const [reward, setReward] = useState<GameScoreResponse | null>(null);
+
+    useEffect(() => {
+        if (gameOver && score > 0) {
+            submitGameScore('2048', score).then(res => setReward(res));
+        }
+    }, [gameOver, score]);
 
     const initializeGame = useCallback(() => {
         let newBoard = new Array(CELL_COUNT).fill(0);
@@ -19,6 +27,7 @@ export default function Mindful2048({ isOpen, onClose }: { isOpen: boolean; onCl
         setScore(0);
         setGameOver(false);
         setWon(false);
+        setReward(null);
     }, []);
 
     useEffect(() => {
@@ -206,7 +215,21 @@ export default function Mindful2048({ isOpen, onClose }: { isOpen: boolean; onCl
                             <h3 className="text-4xl font-black text-white mb-2">
                                 {won ? 'You Win!' : 'Game Over'}
                             </h3>
-                            <p className="text-indigo-200 mb-6 font-medium">Final Score: {score}</p>
+                            <p className="text-indigo-200 mb-2 font-medium">Final Score: {score}</p>
+
+                            {reward && (
+                                <div className="mb-6 flex flex-col items-center gap-1 bg-white/10 px-4 py-2 rounded-xl">
+                                    <span className="text-yellow-400 font-bold flex items-center gap-1">
+                                        <Coins size={16} /> +{reward.earnedCoins} Coins
+                                    </span>
+                                    {reward.leveledUp && (
+                                        <span className="text-emerald-400 text-xs font-bold flex items-center gap-1 animate-pulse">
+                                            <TrendingUp size={12} /> Level Up! You are now level {reward.level}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+
                             <Button
                                 onClick={initializeGame}
                                 className="bg-indigo-500 hover:bg-indigo-400 text-white border-0 shadow-xl rounded-xl py-6 px-10 font-bold"

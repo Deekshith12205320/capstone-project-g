@@ -33,6 +33,18 @@ const userSchema = new mongoose.Schema({
     dislikes: [String],
     contact_name: String,
     contact_phone: String,
+    coins: {
+        type: Number,
+        default: 0
+    },
+    progress: {
+        type: Number,
+        default: 0
+    },
+    level: {
+        type: Number,
+        default: 1
+    },
     joinedAt: {
         type: Date,
         default: Date.now
