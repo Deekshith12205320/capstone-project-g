@@ -5,8 +5,40 @@ import { z } from 'zod';
 import { verifyGoogleToken } from '../services/auth.js';
 import { signToken, verifyToken } from '../services/jwt.js';
 import { User } from '../models/User.js';
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
+
 
 const router = Router();
+
+// Setup Nodemailer Transporter
+let defaultTransporter = null;
+const getTransporter = async () => {
+  if (defaultTransporter) return defaultTransporter;
+  if (process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_HOST) {
+    defaultTransporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT || 587,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      }
+    });
+  } else {
+    // Generate test account explicitly for development/testing
+    const testAccount = await nodemailer.createTestAccount();
+    defaultTransporter = nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+  }
+  return defaultTransporter;
+};
 
 // Validation schemas
 const loginSchema = z.object({
@@ -120,6 +152,77 @@ router.post('/register', async (req, res, next) => {
       return res.status(400).json({ error: err.errors });
     }
     next(err);
+  }
+});
+
+// Forgot Password endpoint
+router.post('/forgot-password', async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Return success even if not found to prevent email enumeration
+      return res.json({ message: 'If an account with that email exists, an OTP will be sent.' });
+    }
+
+    // Generate 6-digit OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+    
+    user.resetPasswordOTP = otp;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 mins
+    await user.save();
+
+    const transporter = await getTransporter();
+
+    let info = await transporter.sendMail({
+      from: '"Vista Support" <noreply@vista-wellbeing.com>',
+      to: email,
+      subject: "Your Password Reset OTP Code",
+      text: `Your OTP code is ${otp}. It will expire in 15 minutes.`,
+      html: `<p>Your OTP code is <b>${otp}</b>. It will expire in 15 minutes.</p>`,
+    });
+
+    console.log("OTP Email sent: %s", info.messageId);
+    if (!process.env.SMTP_USER) {
+        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    }
+
+    res.json({ message: 'If an account with that email exists, an OTP will be sent.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to process forgot password request' });
+  }
+});
+
+// Reset Password endpoint
+router.post('/reset-password', async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ error: 'Email, OTP, and new password are required' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    if (user.resetPasswordOTP !== otp || user.resetPasswordExpires < Date.now()) {
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    user.password = newPassword; 
+    user.resetPasswordOTP = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Password has been reset successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to reset password' });
   }
 });
 

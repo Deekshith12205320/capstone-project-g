@@ -33,6 +33,8 @@ const userSchema = new mongoose.Schema({
     dislikes: [String],
     contact_name: String,
     contact_phone: String,
+    resetPasswordOTP: String,
+    resetPasswordExpires: Date,
     coins: {
         type: Number,
         default: 0

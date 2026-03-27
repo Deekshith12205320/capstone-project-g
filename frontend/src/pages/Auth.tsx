@@ -2,16 +2,20 @@ import { useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { useNavigate, Link } from 'react-router-dom';
-import { Sprout } from 'lucide-react';
+import { Sprout, ArrowLeft } from 'lucide-react';
 import { useAmbience } from '../context/AmbienceContext';
 import { cn } from '../lib/utils';
 
 import { useAuth } from '../context/AuthContext';
 
-import { login as apiLogin, register as apiRegister } from '../services/api';
+import { login as apiLogin, register as apiRegister, forgotPassword, resetPassword } from '../services/api';
 
 export default function Auth() {
     const [isLogin, setIsLogin] = useState(true);
+    const [forgotPasswordStage, setForgotPasswordStage] = useState<'none' | 'email' | 'otp'>('none');
+    const [otp, setOtp] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -19,6 +23,7 @@ export default function Auth() {
         confirmPassword: ''
     });
     const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
     const navigate = useNavigate();
     const { theme, setTheme } = useAmbience();
@@ -27,8 +32,37 @@ export default function Auth() {
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setSuccessMessage('');
 
         try {
+            if (forgotPasswordStage === 'email') {
+                if (!formData.email) {
+                    setError('Please enter your email');
+                    return;
+                }
+                await forgotPassword(formData.email);
+                setSuccessMessage('If an account exists, an OTP has been sent. Please check your email.');
+                setForgotPasswordStage('otp');
+                return;
+            }
+            if (forgotPasswordStage === 'otp') {
+                if (newPassword !== formData.confirmPassword) {
+                    setError('Passwords do not match');
+                    return;
+                }
+                if (!otp || !newPassword) {
+                    setError('Please fill in all fields');
+                    return;
+                }
+                await resetPassword(formData.email, otp, newPassword);
+                setSuccessMessage('Password successfully reset. You can now log in.');
+                setForgotPasswordStage('none');
+                setIsLogin(true);
+                setOtp('');
+                setNewPassword('');
+                return;
+            }
+
             if (isLogin) {
                 const data = await apiLogin(formData.email, formData.password);
                 login(data.token, data.user);
@@ -137,13 +171,30 @@ export default function Auth() {
 
                 {/* Right Side: Form (60%) */}
                 <div className="w-full md:w-[60%] p-10 md:p-14 bg-white/95 backdrop-blur-xl flex flex-col justify-center">
-                    <div className="max-w-sm mx-auto w-full">
+                    <div className="max-w-sm mx-auto w-full relative">
+                        {forgotPasswordStage !== 'none' && (
+                            <button 
+                                onClick={() => {
+                                    setForgotPasswordStage('none');
+                                    setError('');
+                                    setSuccessMessage('');
+                                }} 
+                                className="absolute -top-12 -left-4 md:-left-8 text-gray-500 hover:text-gray-900 flex items-center gap-2 text-sm font-semibold transition-colors"
+                            >
+                                <ArrowLeft size={16} /> Back to Login
+                            </button>
+                        )}
+
                         <div className="mb-10 text-center md:text-left">
                             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                {isLogin ? 'Welcome Back' : 'Get Started'}
+                                {forgotPasswordStage === 'none' 
+                                    ? (isLogin ? 'Welcome Back' : 'Get Started')
+                                    : (forgotPasswordStage === 'email' ? 'Reset Password' : 'Enter OTP')}
                             </h1>
                             <p className="text-gray-500">
-                                {isLogin ? 'Enter your details to access your account.' : 'Create your account to start your journey.'}
+                                {forgotPasswordStage === 'none' 
+                                    ? (isLogin ? 'Enter your details to access your account.' : 'Create your account to start your journey.')
+                                    : (forgotPasswordStage === 'email' ? 'Enter your email to receive an OTP code.' : 'Enter the 6-digit OTP code and your new password.')}
                             </p>
                         </div>
 
@@ -154,83 +205,175 @@ export default function Auth() {
                                 </div>
                             )}
 
-                            {!isLogin && (
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Full Name</label>
-                                    <Input
-                                        placeholder="John Doe"
-                                        required
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
-                                    />
+                            {successMessage && (
+                                <div className="p-3 text-sm text-emerald-600 bg-emerald-50 rounded-lg font-medium border border-emerald-100">
+                                    {successMessage}
                                 </div>
                             )}
 
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Email</label>
-                                <Input
-                                    type="email"
-                                    placeholder="name@example.com"
-                                    required
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
-                                />
-                            </div>
+                            {/* Forgot Password Flow */}
+                            {forgotPasswordStage !== 'none' ? (
+                                <>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Email</label>
+                                        <Input
+                                            type="email"
+                                            placeholder="name@example.com"
+                                            required
+                                            value={formData.email}
+                                            disabled={forgotPasswordStage === 'otp'}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium disabled:opacity-50"
+                                        />
+                                    </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Password</label>
-                                <Input
-                                    type="password"
-                                    placeholder="••••••••"
-                                    required
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
-                                />
-                            </div>
+                                    {forgotPasswordStage === 'otp' && (
+                                        <>
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">6-Digit OTP Code</label>
+                                                <Input
+                                                    type="text"
+                                                    placeholder="123456"
+                                                    required
+                                                    value={otp}
+                                                    onChange={(e) => setOtp(e.target.value)}
+                                                    className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium text-lg tracking-widest text-center"
+                                                    maxLength={6}
+                                                />
+                                            </div>
 
-                            {!isLogin && (
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Confirm Password</label>
-                                    <Input
-                                        type="password"
-                                        placeholder="••••••••"
-                                        required
-                                        value={formData.confirmPassword}
-                                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                        className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
-                                    />
-                                </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">New Password</label>
+                                                <Input
+                                                    type="password"
+                                                    placeholder="••••••••"
+                                                    required
+                                                    value={newPassword}
+                                                    onChange={(e) => setNewPassword(e.target.value)}
+                                                    className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Confirm New Password</label>
+                                                <Input
+                                                    type="password"
+                                                    placeholder="••••••••"
+                                                    required
+                                                    value={formData.confirmPassword}
+                                                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                                    className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <Button
+                                        className={cn("w-full h-12 text-base font-bold tracking-wide rounded-xl text-white shadow-lg transition-all transform hover:-translate-y-0.5 mt-4", buttonClass)}
+                                    >
+                                        {forgotPasswordStage === 'email' ? 'Send OTP' : 'Reset Password'}
+                                    </Button>
+                                </>
+                            ) : (
+                                /* Normal Login / Register Flow */
+                                <>
+                                    {!isLogin && (
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Full Name</label>
+                                            <Input
+                                                placeholder="John Doe"
+                                                required
+                                                value={formData.name}
+                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Email</label>
+                                        <Input
+                                            type="email"
+                                            placeholder="name@example.com"
+                                            required
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Password</label>
+                                        <Input
+                                            type="password"
+                                            placeholder="••••••••"
+                                            required
+                                            value={formData.password}
+                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
+                                        />
+                                    </div>
+
+                                    {/* Forgot Password Text Link below password field for login ONLY */}
+                                    {isLogin && (
+                                        <div className="flex justify-end">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setForgotPasswordStage('email');
+                                                    setError('');
+                                                }}
+                                                className="text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors"
+                                            >
+                                                Forgot Password?
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {!isLogin && (
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Confirm Password</label>
+                                            <Input
+                                                type="password"
+                                                placeholder="••••••••"
+                                                required
+                                                value={formData.confirmPassword}
+                                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                                className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <Button
+                                        className={cn("w-full h-12 text-base font-bold tracking-wide rounded-xl text-white shadow-lg transition-all transform hover:-translate-y-0.5 mt-4", buttonClass)}
+                                    >
+                                        {isLogin ? 'Sign In' : 'Create Account'}
+                                    </Button>
+                                </>
                             )}
-
-                            <Button
-                                className={cn("w-full h-12 text-base font-bold tracking-wide rounded-xl text-white shadow-lg transition-all transform hover:-translate-y-0.5 mt-4", buttonClass)}
-                            >
-                                {isLogin ? 'Sign In' : 'Create Account'}
-                            </Button>
                         </form>
 
 
 
-                        <div className="mt-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-                            <p className="text-muted">
-                                {isLogin ? "Don't have an account yet? " : "Already have an account? "}
-                                {isLogin ? (
-                                    <Link to="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
-                                        Create one
-                                    </Link>
-                                ) : (
-                                    <button
-                                        onClick={() => setIsLogin(true)}
-                                        className="font-bold text-primary hover:text-primary/80 transition-colors"
-                                    >
-                                        Sign in
-                                    </button>
-                                )}
-                            </p>
-                        </div>
+                        {forgotPasswordStage === 'none' && (
+                            <div className="mt-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+                                <p className="text-muted">
+                                    {isLogin ? "Don't have an account yet? " : "Already have an account? "}
+                                    {isLogin ? (
+                                        <Link to="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
+                                            Create one
+                                        </Link>
+                                    ) : (
+                                        <button
+                                            onClick={() => setIsLogin(true)}
+                                            className="font-bold text-primary hover:text-primary/80 transition-colors"
+                                        >
+                                            Sign in
+                                        </button>
+                                    )}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

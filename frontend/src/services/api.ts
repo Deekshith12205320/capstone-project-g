@@ -79,6 +79,24 @@ export async function register(name: string, email: string, password: string, ad
     return handleApiResponse(response, 'Registration failed');
 }
 
+export async function forgotPassword(email: string): Promise<any> {
+    const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+    });
+    return handleApiResponse(response, 'Failed to request password reset');
+}
+
+export async function resetPassword(email: string, otp: string, newPassword: string): Promise<any> {
+    const response = await fetch(`${API_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp, newPassword })
+    });
+    return handleApiResponse(response, 'Failed to reset password');
+}
+
 
 export async function loginWithGoogle(idToken: string): Promise<any> {
     const response = await fetch(`${API_URL}/auth/google`, {
