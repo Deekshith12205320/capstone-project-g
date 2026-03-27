@@ -71,11 +71,8 @@ export default function Auth() {
                     setError('Passwords do not match');
                     return;
                 }
-                if (!formData.name.trim()) {
-                    setError('Please enter your full name');
-                    return;
-                }
-                const data = await apiRegister(formData.name, formData.email, formData.password);
+                const generatedName = formData.email.split('@')[0];
+                const data = await apiRegister(generatedName, formData.email, formData.password);
                 login(data.token, data.user);
             }
             navigate('/dashboard');
@@ -277,18 +274,7 @@ export default function Auth() {
                             ) : (
                                 /* Normal Login / Register Flow */
                                 <>
-                                    {!isLogin && (
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Full Name</label>
-                                            <Input
-                                                placeholder="John Doe"
-                                                required
-                                                value={formData.name}
-                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                                className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all font-medium"
-                                            />
-                                        </div>
-                                    )}
+
 
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-bold text-gray-900 uppercase tracking-widest pl-1">Email</label>
