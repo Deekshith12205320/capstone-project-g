@@ -30,8 +30,7 @@ const DEFAULT_TRACKS: SavedTrack[] = [
 ];
 
 const AMBIENT_SOUNDS = [
-    // Because a Spotify webpage URL cannot be played by a raw HTML <audio> element, I substituted a royalty-free Rain MP3.
-    { id: 'rain', name: 'Rain', icon: CloudRain, url: 'https://cdn.pixabay.com/download/audio/2021/08/04/audio_0625c1539c.mp3' },
+    { id: 'rain', name: 'Rain', icon: CloudRain, url: '/sounds/rain.mp3' },
     { id: 'forest', name: 'Forest', icon: TreePine, url: '/sounds/forest.mp3' },
     { id: 'ocean', name: 'Ocean Waves', icon: Waves, url: '/sounds/ocean.mp3' },
     { id: 'fire', name: 'Fireplace', icon: Flame, url: '/sounds/fireplace.mp3' },
