@@ -212,17 +212,19 @@ export default function MusicPlayer() {
             <audio ref={ambientAudioRef} />
 
             {/* Top Row: Ambient Sounds */}
-            <div className="w-0 h-0 opacity-0 overflow-hidden group-hover:w-full group-hover:h-auto group-hover:opacity-100 flex items-center justify-between gap-1 border-black/5 group-hover:border-b group-hover:pb-2 group-hover:mb-2 px-1 transition-all duration-300">
-                {AMBIENT_SOUNDS.map((sound) => {
+            <div className="w-0 h-0 opacity-0 overflow-hidden group-hover:w-full group-hover:h-auto group-hover:opacity-100 flex items-center justify-center gap-1 border-black/5 group-hover:border-b group-hover:pb-2 group-hover:mb-2 px-3 transition-all duration-300">
+                {AMBIENT_SOUNDS.map((sound, index) => {
                     const Icon = sound.icon;
                     const isActive = activeAmbient === sound.id;
+                    const isMiddle = index === 3; // divide after 3rd icon
                     return (
                         <button
                             key={sound.id}
                             onClick={() => toggleAmbient(sound.id, sound.url)}
                             className={cn(
                                 "p-1.5 rounded-full transition-all duration-300 relative group/ambient flex-shrink-0 cursor-default",
-                                isActive ? "bg-[#849b87]/20 text-[#849b87] scale-110" : "hover:bg-black/5 text-gray-500 hover:text-gray-800"
+                                isActive ? "bg-[#849b87]/20 text-[#849b87] scale-110" : "hover:bg-black/5 text-gray-500 hover:text-gray-800",
+                                isMiddle ? "ml-6" : "" // large gap in the middle
                             )}
                             onPointerDown={(e) => e.stopPropagation()} /* Prevent drag from activating on buttons */
                         >
