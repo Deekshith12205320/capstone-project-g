@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Music, Play, Pause, SkipForward, Heart, CloudRain, TreePine, Waves, Flame, Wind, Droplets, Moon, Coffee } from 'lucide-react';
+import { Music, Play, Pause, SkipForward, Heart, CloudRain, TreePine, Waves, Flame, CloudLightning, Bird } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import type { SavedTrack } from '../dashboard/JamendoPlayer';
@@ -30,14 +30,13 @@ const DEFAULT_TRACKS: SavedTrack[] = [
 ];
 
 const AMBIENT_SOUNDS = [
-    { id: 'rain', name: 'Rain', icon: CloudRain, url: 'https://raw.githubusercontent.com/rafaelreis-hotmart/Audio-Sample-files/master/sample.mp3' },
-    { id: 'forest', name: 'Forest', icon: TreePine, url: 'https://raw.githubusercontent.com/thelinmichael/spotify-web-api-node/master/test/fixtures/track_1.mp3' },
-    { id: 'ocean', name: 'Ocean Waves', icon: Waves, url: 'https://raw.githubusercontent.com/rafaelreis-hotmart/Audio-Sample-files/master/sample.mp3' },
-    { id: 'fire', name: 'Campfire', icon: Flame, url: 'https://raw.githubusercontent.com/thelinmichael/spotify-web-api-node/master/test/fixtures/track_1.mp3' },
-    { id: 'wind', name: 'Wind', icon: Wind, url: 'https://raw.githubusercontent.com/rafaelreis-hotmart/Audio-Sample-files/master/sample.mp3' },
-    { id: 'river', name: 'River', icon: Droplets, url: 'https://raw.githubusercontent.com/thelinmichael/spotify-web-api-node/master/test/fixtures/track_1.mp3' },
-    { id: 'night', name: 'Crickets', icon: Moon, url: 'https://raw.githubusercontent.com/rafaelreis-hotmart/Audio-Sample-files/master/sample.mp3' },
-    { id: 'cafe', name: 'Cafe', icon: Coffee, url: 'https://raw.githubusercontent.com/thelinmichael/spotify-web-api-node/master/test/fixtures/track_1.mp3' },
+    // Because a Spotify webpage URL cannot be played by a raw HTML <audio> element, I substituted a royalty-free Rain MP3.
+    { id: 'rain', name: 'Rain', icon: CloudRain, url: 'https://cdn.pixabay.com/download/audio/2021/08/04/audio_0625c1539c.mp3' },
+    { id: 'forest', name: 'Forest', icon: TreePine, url: '/sounds/forest.mp3' },
+    { id: 'ocean', name: 'Ocean Waves', icon: Waves, url: '/sounds/ocean.mp3' },
+    { id: 'fire', name: 'Fireplace', icon: Flame, url: '/sounds/fireplace.mp3' },
+    { id: 'thunder', name: 'Thunder', icon: CloudLightning, url: '/sounds/thunder.mp3' },
+    { id: 'birds', name: 'Birds', icon: Bird, url: '/sounds/birds.mp3' },
 ];
 
 export default function MusicPlayer() {
