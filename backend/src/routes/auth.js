@@ -177,7 +177,7 @@ router.post('/forgot-password', async (req, res, next) => {
     const transporter = await getTransporter();
 
     let info = await transporter.sendMail({
-      from: '"Vista Support" <noreply@vista-wellbeing.com>',
+      from: process.env.EMAIL_FROM || '"Vista Support" <onboarding@resend.dev>',
       to: email,
       subject: "Your Password Reset OTP Code",
       text: `Your OTP code is ${otp}. It will expire in 15 minutes.`,
