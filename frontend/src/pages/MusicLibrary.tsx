@@ -147,7 +147,7 @@ export default function MusicLibrary() {
                         onClick={() => setView('search')}
                         className={cn("px-4 py-1.5 text-sm font-semibold rounded-lg transition-all", view === 'search' ? "bg-white text-primary shadow-sm" : "text-muted hover:text-text")}
                     >
-                        Search Jamendo
+                        Search
                     </button>
                 </div>
             </header>
