@@ -176,20 +176,23 @@ router.post('/forgot-password', async (req, res, next) => {
 
     const transporter = await getTransporter();
 
-    let info = await transporter.sendMail({
+    // Fire and forget: don't await the email sending to prevent blocking the UI for 3-5 seconds
+    transporter.sendMail({
       from: process.env.EMAIL_FROM || '"Vista Support" <onboarding@resend.dev>',
       to: email,
       subject: "Your Password Reset OTP Code",
       text: `Your OTP code is ${otp}. It will expire in 15 minutes.`,
       html: `<p>Your OTP code is <b>${otp}</b>. It will expire in 15 minutes.</p>`,
+    }).then(info => {
+      console.log("OTP Email sent: %s", info.messageId);
+      if (!process.env.SMTP_USER) {
+          console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+      }
+    }).catch(err => {
+      console.error("Failed to send OTP email gracefully:", err);
     });
 
-    console.log("OTP Email sent: %s", info.messageId);
-    if (!process.env.SMTP_USER) {
-        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-    }
-
-    res.json({ message: 'If an account with that email exists, an OTP will be sent.' });
+    return res.json({ message: 'If an account with that email exists, an OTP will be sent.' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to process forgot password request' });
