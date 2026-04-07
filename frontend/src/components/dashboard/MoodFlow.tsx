@@ -65,7 +65,7 @@ export default function MoodFlow({ assessments = [] }: MoodFlowProps) {
         }
     }, [assessments, view]);
 
-    const dataPoints = chartData.map(a => a.score || 50); // Fallback score
+    const dataPoints = chartData.map(a => a.score ?? 0); // Default to 0 for unattempted days
     const hasData = dataPoints.length > 0;
 
     // SVG Chart Dimensions
