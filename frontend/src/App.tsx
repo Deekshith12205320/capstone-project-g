@@ -7,7 +7,6 @@ import History from './pages/History';
 import Profile from './pages/Profile';
 import Journal from './pages/Journal';
 import Quests from './pages/Quests';
-import Landing from './pages/Landing';
 import RegisterWizard from './pages/RegisterWizard';
 
 import Games from './pages/Games';
@@ -23,7 +22,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={<Navigate to="/auth" replace />} />
       <Route path="/auth" element={!isAuthenticated ? <Auth /> : <Navigate to="/dashboard" />} />
       <Route path="/register" element={!isAuthenticated ? <RegisterWizard /> : <Navigate to="/dashboard" />} />
 
