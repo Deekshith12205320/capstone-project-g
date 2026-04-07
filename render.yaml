@@ -37,4 +37,4 @@ services:
           name: student-wellbeing-backend
           property: host
       - key: VITE_GOOGLE_MAPS
-        value: AIzaSyA4eQHLxw8IkZBNyYLoi3CS0cgc0eXNVXc
+        sync: false

@@ -24,7 +24,7 @@ export default function MentalHealthMap() {
 
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS || "AIzaSyA4eQHLxw8IkZBNyYLoi3CS0cgc0eXNVXc" // fallback for development if env not set
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS || "" // use empty string or undefined if env not set to prevent leaking secrets
     });
 
     return (
